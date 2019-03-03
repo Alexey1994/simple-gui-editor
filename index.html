@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+
+    <style>
+        html, body
+        {
+            position: relative;
+            padding:  0;
+            margin:   0;
+            height:   100%;
+            background-color: #aaa;
+        }
+
+        #content
+        {
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="view"></div>
+    <div id="content"></div>
+
+    <script src="text width.js"></script>
+
+    <script src="main.js"></script>
+    <script src="components.js"></script>
+
+    <script src="elements list.js"></script>
+    <script src="editor preview.js"></script>
+    <script src="script editor.js"></script>
+    <script src="element editor.js"></script>
+    <!--script src="type.js"></script>
+    <script src="items editor.js"></script-->
+
+    <script>
+        var elementEditor
+
+        var PageComponent = Component(
+            [
+                [GridComponent, [
+                    //[RectangleComponent, [
+                    [ElementsListComponent],
+                    //]],
+                    [EditorPreviewComponent],
+                    [ElementEditorComponent]
+                ]]
+            ],
+
+            [],
+            [],
+
+            function() {
+                var grid = this.view[0]
+                grid.columns = 'min-content auto min-content'
+                grid.gap = '20px'
+                grid.height = '100%'
+
+                elementEditor = this.view[0][0][2]
+            },
+
+            function() {
+
+            }
+        )
+
+        var page = PageComponent(document.querySelector('#content'))
+
+        //var elementsListComponent = ElementsListComponent(content)
+        //var editorPreviewComponent = EditorPreviewComponent(content)
+
+        /*
+        var typeComponent = TypeComponent(content)
+
+        ///////////////////////////////////////////////////
+
+        var types = [{name: 'integer'}, {name: 'boolean'}]
+
+        var typesComponent = ItemsEditorComponent(view)
+
+        typesComponent.itemSelected = function(typeIndex) {
+            typeComponent.type = types[typeIndex]
+        }
+
+        typesComponent.itemDeleted = function(typeIndex) {
+            types.splice(typeIndex, 1)
+            typesComponent.items = types
+        }
+
+        typesComponent.itemAdded = function() {
+            types.push({
+                name: 'new type'
+            })
+            typesComponent.items = types
+        }
+
+        typesComponent.itemNameChanged = function(data) {
+            types[data.index].name = data.newName
+        }
+
+        typesComponent.items = types
+
+        ///////////////////////////////////////////////////
+
+        var selectComponent = SelectComponent(content)
+        selectComponent.items = ['1', '2']
+
+        selectComponent.selectedItemIndexChanged = function(index) {
+            console.log(index)
+        }
+
+        selectComponent.selectedItemIndex = 1*/
+
+    </script>
+</body>
+</html>

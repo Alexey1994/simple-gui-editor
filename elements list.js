@@ -6,14 +6,14 @@ function addElementInListComponent(element, name) {
     }
 }
 
-var ElementsListComponent = Component(
+var ElementsListComponent = AnonimComponent(
     [
         [RectangleComponent, [
             [GridComponent, [
-                [ButtonComponent],
+                /*[ButtonComponent],
                 [GridComponent, [
                     [TextComponent]
-                ]]
+                ]]*/
             ]]
         ]]
     ],
@@ -31,12 +31,49 @@ var ElementsListComponent = Component(
 
         var grid = this.view[0][0][0]
         grid.columns = '100px'
-
+/*
         var buttonElement = this.view[0][0][0][0][0][0].element
         addElementInListComponent(buttonElement, 'button')
 
         var textElement = this.view[0][0][0][0][1][0].element
-        addElementInListComponent(textElement, 'text')
+        addElementInListComponent(textElement, 'text')*/
+
+        var elementsParent = this.view[0][0][0][0].parent
+
+        components.forEach((component, index) => {
+            var elementWrapperComponent = AnonimComponent(
+                [
+                    [GridComponent]
+                ],
+
+                [],
+                [],
+
+                function() {
+                    var element = this.view[0][0].element
+                    var style = element.style
+                    style.minHeight = '20px'
+                    style.border = '1px solid rgba(0, 0, 0, 0)'
+
+                    element.onmouseenter = function() {
+                        style.border = '1px solid #000'
+                    }
+
+                    element.onmouseleave = function() {
+                        style.border = '1px solid rgba(0, 0, 0, 0)'
+                    }
+
+                    addElementInListComponent(element, index)
+                    component(element, [])
+                },
+
+                function() {
+
+                }
+            )
+
+            elementWrapperComponent(elementsParent)
+        })
     },
 
     function() {

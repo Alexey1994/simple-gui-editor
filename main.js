@@ -1,3 +1,5 @@
+var components = []
+
 function createElement(name) {
     switch(name) {
         case 'text':
@@ -205,7 +207,7 @@ function deleteView(view) {
     }
 }
 
-function Component(view, inputs, outputs, init, update) {
+function AnonimComponent(view, inputs, outputs, init, update) {
     var innerContentIndieces = []
 
     function getInnerContentIndex(nodes, innerContentPath) {
@@ -236,4 +238,10 @@ function Component(view, inputs, outputs, init, update) {
 
         return draw(parent, view, inputs, outputs, init, update)
     }
+}
+
+function Component(view, inputs, outputs, init, update) {
+    var component = AnonimComponent(view, inputs, outputs, init, update)
+    components.push(component)
+    return component
 }

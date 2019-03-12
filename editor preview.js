@@ -1,7 +1,7 @@
 function addElementInPreview(parent, component) {
     var element
 
-    var ElementComponent = Component(
+    var ElementComponent = AnonimComponent(
         [
             [RectangleComponent, [
                 [component]
@@ -42,7 +42,7 @@ function addElementInPreview(parent, component) {
     element = ElementComponent(parent)
 }
 
-var EditorPreviewComponent = Component(
+var EditorPreviewComponent = AnonimComponent(
     [
         ['div', []]
     ],
@@ -63,7 +63,11 @@ var EditorPreviewComponent = Component(
 
         element.ondrop = function(event) {
             var elementType = event.dataTransfer.getData('data')
+            var elementIndex = parseInt(elementType)
+
+            addElementInPreview(element, components[elementIndex])
             
+            /*
             switch(elementType) {
                 case 'button':
                     addElementInPreview(element, ButtonComponent)
@@ -75,6 +79,7 @@ var EditorPreviewComponent = Component(
                     //TextComponent(element)
                     break
             }
+            */
         }
     },
 

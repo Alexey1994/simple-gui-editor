@@ -1,5 +1,5 @@
 /*
-var FieldEditorComponent = Component(
+var FieldEditorComponent = AnonimComponent(
     [
         [TextComponent]
     ],
@@ -18,7 +18,7 @@ var FieldEditorComponent = Component(
 )
 */
 
-var ElementEditorComponent = Component(
+var ElementEditorComponent = AnonimComponent(
     [
         [RectangleComponent, [
             [ListComponent]
@@ -39,7 +39,7 @@ var ElementEditorComponent = Component(
         wrapperStyle.backgroundColor = '#fff'
 
         var list = this.view[0][0][0]
-        list.template = Component(
+        list.template = AnonimComponent(
             [
                 [GridComponent, [
                     [TextComponent],
@@ -58,10 +58,10 @@ var ElementEditorComponent = Component(
 
             function (value, valueChange) {
                 this.view[0][0][0].value = value.inputName
-                this.view[0][0][1].value = value.wrappedElement[value.inputName]
+                this.view[0][0][1].value = JSON.stringify(value.wrappedElement[value.inputName])
 
                 this.view[0][0][1].valueChange = function(newValue) {
-                    value.wrappedElement[value.inputName] = newValue
+                    value.wrappedElement[value.inputName] = JSON.parse(newValue)
                 }
             }
         )

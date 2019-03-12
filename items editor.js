@@ -1,4 +1,4 @@
-var ItemEditorComponent = Component(
+var ItemEditorComponent = AnonimComponent(
     [
         [GridComponent, [
             [NameEditorComponent],
@@ -71,7 +71,7 @@ var ItemEditorComponent = Component(
     }
 )
 
-var ItemsEditorComponent = Component(
+var ItemsEditorComponent = AnonimComponent(
     [
         [RectangleComponent, [
             [ScrollComponent, [

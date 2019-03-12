@@ -81,7 +81,7 @@ var SelectComponent = Component(
         var selectElement = select.element
 
         if(this.changedInput == 0) {
-            selectElement.innerTHML = ''
+            selectElement.innerHTML = ''
 
             items.forEach(function(item) {
                 var optionElement = document.createElement('option')

@@ -38,7 +38,7 @@ var ElementsListComponent = AnonimComponent(
         var textElement = this.view[0][0][0][0][1][0].element
         addElementInListComponent(textElement, 'text')*/
 
-        var elementsParent = this.view[0][0][0][0].parent
+        var elementsParent = this.view[0][0][0][0].element
 
         components.forEach((component, index) => {
             var elementWrapperComponent = AnonimComponent(

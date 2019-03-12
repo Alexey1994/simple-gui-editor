@@ -11,14 +11,24 @@ function createElement(name) {
     }
 }
 
-function draw(parent, model, inputs, outputs, init, update) {
+function draw(parent, rootSelf, model, inputs, outputs, init, update) {
+    var self = {}
     var bindings = []
+
+    if(!rootSelf)
+        rootSelf = self
 
     model.forEach(function(item) {
         if(typeof item[0] == 'function') {
-            bindings.push({
-                getter: item[0](parent, item[1])
-            })
+            var getter = item[0](parent, item[1], rootSelf) //возможно node вместо getter
+
+            bindings.push({getter: getter})
+
+            if(item[2]) {
+                //rootSelf[item[2]] = getter
+                self[item[2]] = getter
+                console.log(rootSelf)
+            }
         }
         else {
             var element = createElement(item[0])
@@ -28,7 +38,7 @@ function draw(parent, model, inputs, outputs, init, update) {
             var innerComponents = item[1]
 
             if(innerComponents)
-                inner = draw(element, innerComponents)
+                inner = draw(element, rootSelf, innerComponents)
 
             var getter = new Proxy(bindings, {
                 get: function(object, key) {
@@ -56,6 +66,10 @@ function draw(parent, model, inputs, outputs, init, update) {
                 getter: getter,
                 inner:  inner
             })
+
+            if(item[2]) {
+                rootSelf[item[2]] = getter
+            }
         }
     })
 
@@ -122,12 +136,10 @@ function draw(parent, model, inputs, outputs, init, update) {
                 })
         )
 
-    var self = {
-        view: proxy,
-        values: values,
-        parent: parent,
-        changedInput: undefined
-    }
+    self.view         = proxy
+    self.values       = values
+    self.parent       = parent
+    self.changedInput = undefined
 
     init.apply(self, self.values)
 
@@ -224,7 +236,7 @@ function AnonimComponent(view, inputs, outputs, init, update) {
 
     getInnerContentIndex(view, innerContentIndieces)
 
-    return function(parent, innerComponents) {
+    return function(parent, innerComponents, rootSelf) {
         if(innerComponents){
             innerContentIndieces.forEach(function(index){
                 var innerIndexNode = view
@@ -236,7 +248,7 @@ function AnonimComponent(view, inputs, outputs, init, update) {
             })
         }
 
-        return draw(parent, view, inputs, outputs, init, update)
+        return draw(parent, rootSelf, view, inputs, outputs, init, update)
     }
 }
 

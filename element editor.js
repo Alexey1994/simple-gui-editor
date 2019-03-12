@@ -24,6 +24,12 @@ var ElementEditorComponent = AnonimComponent(
             [ListComponent]
         ]],
 
+        [RectangleComponent, [
+            [GridComponent, [
+                //[TextComponent]
+            ], 'domWrapper']
+        ]],
+
         [ScriptEditorComponent]
     ],
 
@@ -35,7 +41,7 @@ var ElementEditorComponent = AnonimComponent(
         wrapper.padding = '20px'
         var wrapperElement = this.view[0][0].element
         var wrapperStyle = wrapperElement.style
-
+console.log(this)
         wrapperStyle.backgroundColor = '#fff'
 
         var list = this.view[0][0][0]

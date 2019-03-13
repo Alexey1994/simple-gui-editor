@@ -80,6 +80,8 @@ function drawComponent(parentElement, innerComponents, inputs, outputs, construc
     constructor.call(self)
 
     if(innerComponents) {
+        console.log(inputs, innerComponents)
+
         innerComponents.forEach(innerComponentDescription => {
             var referenceName
             var component
@@ -141,7 +143,7 @@ function Component(innerComponents, inputs, outputs, constructor, onInit, onChan
         getInnerContentIndex(innerComponents, innerContentIndieces)
 
     return function(parentElement, contentComponents) {
-        if(contentComponents) {
+        //if(contentComponents) {
             innerContentIndieces.forEach(function(index){
                 var innerIndexNode = innerComponents
 
@@ -155,7 +157,7 @@ function Component(innerComponents, inputs, outputs, constructor, onInit, onChan
 
                 innerIndexNode[innerContentShift] = contentComponents
             })
-        }
+        //}
 
         return drawComponent(parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy)
     }
@@ -325,7 +327,7 @@ var RectangleComponent = Component(
         ['wrapper', DivComponent, 'inner-content']
     ],
 
-    [],
+    ['1'],
     [],
 
     function() {
@@ -333,6 +335,7 @@ var RectangleComponent = Component(
     },
 
     function() {
+        console.log(this.parentElement)
         this.wrapper.element.style.display = 'block'
         this.wrapper.element.style.padding = '10px'
         this.wrapper.element.style.backgroundColor = 'red'
@@ -352,11 +355,12 @@ var RectangleComponent = Component(
 var TempComponent = Component(
     [
         [RectangleComponent, [
-            [TextComponent]
+            [TextComponent],
+            [ButtonComponent]
         ]]
     ],
 
-    [],
+    ['safafas'],
     [],
 
     function() {
@@ -364,7 +368,7 @@ var TempComponent = Component(
     },
 
     function() {
-
+        
     },
 
     function(name, newValue, oldValue) {
@@ -377,3 +381,4 @@ var TempComponent = Component(
 )
 
 var t = TempComponent(document.body)
+//destroyComponentView(t)

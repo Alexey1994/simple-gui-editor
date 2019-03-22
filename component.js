@@ -1,8 +1,9 @@
-function drawComponent(parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
-    var self = {parentElement}
+function drawComponent(name, parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
+    var self = {name, parentElement}
     var children = []
 
     self.element = null
+    self.children = children
 
     var outputListeners = outputs.map(() => undefined)
 
@@ -51,6 +52,12 @@ function drawComponent(parentElement, innerComponents, inputs, outputs, construc
             if(key == 'outputs')
                 return outputs
 
+            if(key == 'name')
+                return name
+
+            if(key == 'self')
+                return self
+
             var inputIndex = inputToIndexMap[key]
 
             if(typeof inputIndex == 'number')
@@ -80,8 +87,6 @@ function drawComponent(parentElement, innerComponents, inputs, outputs, construc
     constructor.call(self)
 
     if(innerComponents) {
-        console.log(inputs, innerComponents)
-
         innerComponents.forEach(innerComponentDescription => {
             var referenceName
             var component
@@ -104,8 +109,45 @@ function drawComponent(parentElement, innerComponents, inputs, outputs, construc
                 children.push(child)
 
                 if(referenceName)
-                    self[referenceName] = child
+                    innerComponentDescription[3] = child
+                //    self[referenceName] = child
             }
+            else {
+                var child = drawComponent('inner-content', self.element || parentElement, contentComponents, [], [], function(){}, function(){}, function(){}, function(){}) //component(self.element || parentElement, contentComponents)
+                children.push(child)
+
+                if(referenceName)
+                    innerComponentDescription[3] = child
+                //    self[referenceName] = child
+            }
+
+            function updateNamespace(components) {
+                components.forEach(componentDescription => {
+                    var referenceName
+                    var component
+                    var contentComponents
+
+                    referenceName = componentDescription[0]
+
+                    if(typeof referenceName == 'string') {
+                        component = componentDescription[1]
+                        contentComponents = componentDescription[2]
+                    }
+                    else {
+                        component = componentDescription[0]
+                        contentComponents = componentDescription[1]
+                        referenceName = undefined
+                    }
+
+                    if(referenceName)
+                        self[referenceName] = componentDescription[3]
+
+                    if(contentComponents)
+                        updateNamespace(contentComponents)
+                })
+            }
+
+            updateNamespace(innerComponents)
         })
     }
 
@@ -119,7 +161,7 @@ function destroyComponentView(componentView) {
     componentView.destroy()
 }
 
-function Component(innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
+function AnonimComponent(name, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
     var innerContentIndieces = []
 
     function getInnerContentIndex(nodes, innerContentPath) {
@@ -159,13 +201,23 @@ function Component(innerComponents, inputs, outputs, constructor, onInit, onChan
             })
         //}
 
-        return drawComponent(parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy)
+        return drawComponent(name, parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy)
     }
+}
+
+var components = []
+
+function Component(name, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
+    var component = AnonimComponent(name, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy)
+    components.push(component)
+    return component
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
+/*
 var TextComponent = Component(
+    'text',
     null,
     
     ['value'],
@@ -192,6 +244,7 @@ var text = TextComponent(document.body)
 text.value = 'Hi'
 
 var ButtonComponent = Component(
+    'button',
     [
         ['text', TextComponent]
     ],
@@ -230,6 +283,7 @@ button.click = function() {
 }
 
 var ListComponent = Component(
+    'list',
     null,
 
     ['template', 'items'],
@@ -273,6 +327,7 @@ var ListComponent = Component(
 var list = ListComponent(document.body)
 
 list.template = Component(
+    'text-template',
     [
         ['text', TextComponent]
     ],
@@ -300,6 +355,7 @@ list.template = Component(
 list.items = [1, 2, 8]
 
 var DivComponent = Component(
+    'div',
     null,
 
     [],
@@ -322,12 +378,11 @@ var DivComponent = Component(
     }
 )
 
-var RectangleComponent = Component(
-    [
-        ['wrapper', DivComponent, 'inner-content']
-    ],
+var EmptyComponent = Component(
+    'empty',
+    null,
 
-    ['1'],
+    [],
     [],
 
     function() {
@@ -335,13 +390,10 @@ var RectangleComponent = Component(
     },
 
     function() {
-        console.log(this.parentElement)
-        this.wrapper.element.style.display = 'block'
-        this.wrapper.element.style.padding = '10px'
-        this.wrapper.element.style.backgroundColor = 'red'
+
     },
 
-    function(name, newValue, oldValue) {
+    function() {
 
     },
 
@@ -350,17 +402,51 @@ var RectangleComponent = Component(
     }
 )
 
+var RectangleComponent = Component(
+    'rectangle',
+    [
+        //['wrapper', DivComponent, 'inner-content']
+        ['wrapper', null, 'inner-content']
+    ],
+
+    ['1'],
+    [],
+
+    function() {
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
+    },
+
+    function() {
+        //console.log(this.parentElement, this.children[0].element)
+
+        //console.log(this.parentElement)
+        this.element.style.display = 'block'
+        this.element.style.padding = '10px'
+        this.element.style.backgroundColor = 'red'
+    },
+
+    function(name, newValue, oldValue) {
+
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
+    }
+)
+
 //var rectangle = RectangleComponent(document.body, [[ButtonComponent]])
 
 var TempComponent = Component(
+    'temp',
     [
         [RectangleComponent, [
-            [TextComponent],
+            ['asdf', TextComponent],
             [ButtonComponent]
         ]]
     ],
 
-    ['safafas'],
+    [],
     [],
 
     function() {
@@ -368,7 +454,7 @@ var TempComponent = Component(
     },
 
     function() {
-        
+        this.asdf.value = 'Hidkfjs'
     },
 
     function(name, newValue, oldValue) {
@@ -382,3 +468,4 @@ var TempComponent = Component(
 
 var t = TempComponent(document.body)
 //destroyComponentView(t)
+*/

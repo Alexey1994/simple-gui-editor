@@ -1,81 +1,71 @@
-/*
-var FieldEditorComponent = AnonimComponent(
-    [
-        [TextComponent]
-    ],
-
-    ['value'],
-    ['valueChange'],
-
-    function (value, valueChange) {
-
-    },
-
-    function (value, valueChange) {
-        //console.log(this)
-        this.view[0].value = value
-    }
-)
-*/
-
 var ElementEditorComponent = AnonimComponent(
+    'component-editor',
     [
-        [RectangleComponent, [
-            [ListComponent]
+        ['wrapper', RectangleComponent, [
+            ['list', ListComponent]
         ]],
 
         [RectangleComponent, [
             [GridComponent, [
                 //[TextComponent]
-            ], 'domWrapper']
+            ]]
         ]],
 
-        [ScriptEditorComponent]
+        //[ScriptEditorComponent]
     ],
 
     ['element'],
     [],
 
-    function(element) {
-        var wrapper = this.view[0]
-        wrapper.padding = '20px'
-        var wrapperElement = this.view[0][0].element
-        var wrapperStyle = wrapperElement.style
-console.log(this)
-        wrapperStyle.backgroundColor = '#fff'
+    function() {
 
-        var list = this.view[0][0][0]
-        list.template = AnonimComponent(
+    },
+
+    function() {
+        this.wrapper.padding = '20px'
+        this.wrapper.element.style.backgroundColor = '#fff'
+
+        this.list.template = AnonimComponent(
+            'list-item',
             [
-                [GridComponent, [
-                    [TextComponent],
-                    [InputComponent]
+                ['grid', GridComponent, [
+                    ['inputName', TextComponent],
+                    ['inputValue', InputComponent]
                 ]]
             ],
 
             ['value'],
             ['valueChange'],
 
-            function (value, valueChange) {
-                var grid = this.view[0]
-                grid.columns = 'min-content auto'
-                grid.gap = '10px'
+            function() {
+
             },
 
-            function (value, valueChange) {
-                this.view[0][0][0].value = value.inputName
-                this.view[0][0][1].value = JSON.stringify(value.wrappedElement[value.inputName])
+            function () {
+                this.grid.columns = 'min-content auto'
+                this.grid.gap = '10px'
+            },
 
-                this.view[0][0][1].valueChange = function(newValue) {
+            function (name, value, valueChange) {
+                this.inputName.value = value.inputName
+                this.inputValue.value = JSON.stringify(value.wrappedElement[value.inputName])
+
+                this.inputValue.valueChange = function(newValue) {
                     value.wrappedElement[value.inputName] = JSON.parse(newValue)
                 }
+            },
+
+            function() {
+
             }
         )
     },
 
-    function(element) {
-        const wrappedElement = element[0][0][0]
-        var list = this.view[0][0][0]
-        list.items = wrappedElement.inputs.map(inputName => ({inputName, element, wrappedElement}))
+    function(name, value) {
+        this.list.items = value.self.wrappedComponent.inputs.map(inputName => ({inputName, element: this.element, wrappedElement: value.self.wrappedComponent}))
+    },
+
+    function() {
+
     }
 )

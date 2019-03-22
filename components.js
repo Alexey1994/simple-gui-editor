@@ -1,110 +1,139 @@
 var TextComponent = Component(
-    [
-        ['text']
-    ],
-
+    'text',
+    null,
+    
     ['value'],
     [],
 
-    function(value) {
-        this.values[0] = 'text'
+    function() {
+        this.element = document.createTextNode('')
     },
 
-    function(value) {
-        this.view[0].element.data = value
+    function() {
+        this.parentElement.appendChild(this.element)
+    },
+
+    function(name, newValue, oldValue) {
+        this.element.data = newValue
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var ButtonComponent = Component(
+    'button',
     [
-        ['button', [
-            [TextComponent]
-        ]]
+        ['textOnButton', TextComponent]
     ],
 
     ['text'],
     ['click'],
 
-    function(text, click) {
-        this.view[0][0].value = this.values[0] = 'Button'
-
-        this.view[0].element.onclick = function() {
-            click()
-        }
+    function() {
+        this.element = document.createElement('button')
     },
 
-    function(text, click) {
-        this.view[0][0].value = text
+    function() {
+        this.text = this.textOnButton.value = 'Button'
+
+        var self = this
+        this.element.onclick = function() {
+            self.click()
+        }
+
+        this.parentElement.appendChild(this.element)
+    },
+
+    function(name, newValue, oldValue) {
+        this.textOnButton.value = newValue
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var InputComponent = Component(
-    [
-        ['input']
-    ],
-
+    'input',
+    null,
+    
     ['value'],
     ['valueChange'],
 
-    function(value, valueChange) {
-        var inputElement = this.view[0].element
+    function() {
+        this.element = document.createElement('input')
+        this.parentElement.appendChild(this.element)
+    },
 
-        inputElement.oninput = function() {
-            valueChange(inputElement.value)
+    function() {
+        var self = this
+        this.element.oninput = function(event) {
+            self.valueChange(self.element.value)
         }
     },
 
-    function(value, valueChange) {
-        this.view[0].element.value = value
+    function(name, value, oldValue) {
+        this.element.value = value
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var SelectComponent = Component(
-    [
-        ['select']
-    ],
+    'dropdown',
+    null,
 
     ['items', 'selectedItemIndex'],
     ['selectedItemIndexChanged'],
 
-    function(items, selectedItemIndex, selectedItemIndexChanged) {
-        var selectElement = this.view[0].element
+    function() {
+        this.element = document.createElement('select')
+    },
 
-        selectElement.oninput = function(event) {
+    function() {
+        this.element.oninput = function(event) {
             var selectedIndex = event.target.selectedIndex
-            selectedItemIndexChanged(selectedIndex)
+            this.selectedItemIndexChanged(selectedIndex)
         }
     },
 
-    function(items, selectedItemIndex, selectedItemIndexChanged) {
-        var select = this.view[0]
-        var selectElement = select.element
+    function() {
+        if(name == 'items') {
+            this.element.innerHTML = ''
 
-        if(this.changedInput == 0) {
-            selectElement.innerHTML = ''
-
-            items.forEach(function(item) {
+            this.items.forEach(function(item) {
                 var optionElement = document.createElement('option')
                 optionElement.innerHTML = item
-                selectElement.appendChild(optionElement)
+                this.element.appendChild(optionElement)
             })
         }
-        else if(this.changedInput == 1) {
-            selectElement.selectedIndex = selectedItemIndex
+        else if(name == 'selectedItemIndex') {
+            this.element.selectedIndex = this.selectedItemIndex
         }
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var NameEditorComponent = Component(
-    [
-        ['input']
-    ],
+    'name-editor',
+    null,
 
     ['value'],
     ['valueChange'],
 
-    function(value, valueChange) {
-        var inputElement = this.view[0].element
+    function() {
+        this.element = document.createElement('input')
+    },
+
+    function() {
+        var inputElement = this.element
         var style = inputElement.style
 
         style.pointer         = 'text'
@@ -118,7 +147,7 @@ var NameEditorComponent = Component(
 
         inputElement.oninput = function() {
             style.width = Math.max(20, getTextWidth(inputElement.value)) + 'px'
-            valueChange(inputElement.value)
+            this.valueChange(inputElement.value)
         }
 
         inputElement.onclick = function(event) {
@@ -126,138 +155,297 @@ var NameEditorComponent = Component(
         }
     },
 
-    function(value, valueChange) {
-        var inputElement = this.view[0].element
+    function(name, value) {
+        var inputElement = this.element
         var style = inputElement.style
         style.width = Math.max(20, getTextWidth(value)) + 'px'
         inputElement.value = value
-    }    
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
+    }
 )
 
 var GridComponent = Component(
+    'grid',
     [
-        ['div', 'inner-content']
+        [null, 'inner-content']
     ],
 
     ['rows', 'columns', 'gap', 'height'],
     [],
 
-    function(rows, columns, gap) {
-        var element = this.view[0].element
-        var style = element.style
-
-        style.display = 'grid'
+    function() {
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
     },
 
-    function(rows, columns, gap, height) {
-        var element = this.view[0].element
-        var style = element.style
+    function() {
+        with(this.element.style) {
+            display = 'grid'
+            height = '100%'
+        }
+    },
 
-        if(this.changedInput == 0)
-            style.gridTemplateRows = rows
-        else if(this.changedInput == 1)
-            style.gridTemplateColumns = columns
-        else if(this.changedInput == 2)
-            style.gap = gap
-        else if(this.changedInput == 3)
-            style.height = height
+    function(name, value, oldValue) {
+        var style = this.element.style
+
+        switch(name) {
+            case 'rows':
+                style.gridTemplateRows = value
+                break
+
+            case 'columns':
+                style.gridTemplateColumns = value
+                break
+
+            case 'gap':
+                style.gap = value
+                break
+
+            case 'height':
+                style.height = value
+                break
+        }
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var ScrollComponent = Component(
+    'scroll',
     [
-        ['div', 'inner-content']
+        [null, 'inner-content']
     ],
 
-    ['height'],
+    [],
     [],
 
-    function(rows, columns, gap) {
-        var element = this.view[0].element
-        var style = element.style
+    function() {
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
+    },
+
+    function() {
+        var style = this.element.style
 
         style.display = 'block'
         style.overflow = 'auto'
     },
 
-    function(height) {
-        var element = this.view[0].element
-        var style = element.style
+    function(name, newValue, oldValue) {
+        
+    },
 
-        style.height = height
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var RectangleComponent = Component(
+    'rectangle',
     [
-        ['div', 'inner-content']
+        [null, 'inner-content']
     ],
 
     ['width', 'height', 'margin', 'padding'],
     [],
 
-    function(width, height, margin, padding) {
-        var element = this.view[0].element
-        var style = element.style
-
-        style.display = 'inline-block'
-        style.overflow = 'auto'
+    function() {
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
     },
 
-    function(width, height, margin, padding) {
-        var element = this.view[0].element
-        var style = element.style
+    function() {
+        this.element.style.display = 'inline-block'
+    },
 
-        if(this.changedInput == 0)
-            style.width = width
-        else if(this.changedInput == 1)
-            style.height = height
-        else if(this.changedInput == 2)
-            style.margin = margin
-        else if(this.changedInput == 3)
-            style.padding = padding
+    function(name, value, oldValue) {
+        var style = this.element.style
+        style[name] = value
+    },
+
+    function() {
+        this.parentElement.removeChild(this.element)
     }
 )
 
 var ListComponent = Component(
-    [],
+    'list',
+    null,
 
     ['template', 'items'],
     ['itemChange'],
 
-    function(template, items, itemChange) {
+    function() {
         this.views = []
     },
 
-    function(template, items, itemChange) {
-        if(this.changedInput == 0) {
-            this.template = template
+    function() {
+
+    },
+
+    function(name, value) {
+        var self = this
+
+        switch(name) {
+            case 'items':
+                this.views.forEach(view => destroyComponentView(view))
+                this.views.splice(this.views.length, 0)
+
+                this.items.forEach(function(item, index){
+                    var component = self.template(self.parentElement)
+                    component.value = item
+
+                    component.valueChange = function(data) {
+                        self.itemChange({data, index})
+                    }
+
+                    self.views[index] = component
+                })
+                break
         }
-        else if(this.changedInput == 1) {
-            var parent = this.parent
-            var templateComponent = this.template
+    },
 
-            this.views.forEach(function(view) {
-                deleteView(view)
-            })
-
-            this.views.splice(this.views.length, 0)
-
-            var views = this.views
-
-            items.forEach(function(item, index){
-                var component = templateComponent(parent)
-                component.value = item
-
-                component.valueChange = function(data) {
-                    itemChange({
-                        data: data,
-                        index: index
-                    })
-                }
-
-                views[index] = component
-            })
-        }
+    function() {
+        this.views.forEach(view => destroyComponentView(view))
     }
 )
+
+var TabPanel = Component(
+    'tab-panel',
+
+    [
+        ['wrapper', GridComponent, [
+            ['head', RectangleComponent, [
+                ['headList', ListComponent]
+            ]],
+            ['page', RectangleComponent, [
+
+            ]]
+        ]]
+    ],
+
+    ['tabNames', 'pages'],
+    [],
+
+    function() {
+
+    },
+
+    function() {
+        var tabPanel = this
+        this.wrapper.rows = 'min-content auto'
+
+        this.headList.template = AnonimComponent(
+            'tab-panel-head',
+
+            [
+                [RectangleComponent, [
+                        ['navigationButton', ButtonComponent]
+                ]]
+            ],
+
+            ['value'],
+            ['valueChange'],
+
+            function() {
+
+            },
+
+            function() {
+
+            },
+
+            function(name, value) {
+                var self = this
+                this.navigationButton.text = value
+
+                this.navigationButton.click = function() {
+                    self.valueChange(self.value)
+                }
+            },
+
+            function() {
+
+            }
+        )
+
+        this.headList.itemChange = function(selectedTab) {
+            if(tabPanel.selectedTab)
+                destroyComponentView(tabPanel.selectedTab)
+
+            tabPanel.selectedTab = tabPanel.pages[selectedTab.index](tabPanel.page.element)
+        }
+    },
+
+    function(name, value) {
+        switch(name) {
+            case 'tabNames':
+                this.headList.items = value
+                break
+        }
+    },
+
+    function() {
+
+    }
+)
+
+var page1 = AnonimComponent(
+    'page1',
+    [
+        ['text', TextComponent]
+    ],
+
+    [], [],
+
+    function() {
+
+    },
+
+    function() {
+        this.text.value = 'Page 1'
+    },
+
+    function(name, value) {
+
+    },
+
+    function() {
+
+    }
+)
+
+var page2 = AnonimComponent(
+    'page2',
+    [
+        ['text', TextComponent],
+        [ButtonComponent]
+    ],
+
+    [], [],
+
+    function() {
+
+    },
+
+    function() {
+        this.text.value = 'Page 2'
+    },
+
+    function(name, value) {
+
+    },
+
+    function() {
+
+    }
+)
+
+var tab = TabPanel(document.body)
+tab.pages = [page1, page2]
+tab.tabNames = ['Tab1', 'Tab2']

@@ -2,9 +2,10 @@ function addElementInPreview(parent, component) {
     var element
 
     var ElementComponent = AnonimComponent(
+        'element-preview',
         [
-            [RectangleComponent, [
-                [component]
+            ['rectangle', RectangleComponent, [
+                ['wrappedComponent', component]
             ]]
         ],
 
@@ -12,13 +13,14 @@ function addElementInPreview(parent, component) {
         [],
 
         function() {
-            var rectangleElement = this.view[0][0].element
+
+        },
+
+        function() {
+            var rectangleElement = this.rectangle.element
             var style = rectangleElement.style
 
             rectangleElement.onclick = function() {
-                //alert()
-                //console.log(t)
-                //window.currentElement = element
                 elementEditor.element = element
             }
 
@@ -29,7 +31,10 @@ function addElementInPreview(parent, component) {
             rectangleElement.onmouseleave = function() {
                 style.outline = 'none'
             }
-            //console.log(rectangleElement)
+        },
+
+        function() {
+
         },
 
         function() {
@@ -37,53 +42,47 @@ function addElementInPreview(parent, component) {
         }
     )
 
-    //component(parent)
-
     element = ElementComponent(parent)
 }
 
 var EditorPreviewComponent = AnonimComponent(
-    [
-        ['div', []]
-    ],
+    'component-preview',
+    null,
 
     [],
     [],
 
     function() {
-        var element = this.view[0].element
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
+    },
 
-        element.ondragenter = function(event) {
+    function() {
+        this.element.style.height = '100%'
+
+        this.element.ondragenter = function(event) {
             event.returnValue = false
         }
 
-        element.ondragover = function(event) {
+        this.element.ondragover = function(event) {
             event.returnValue = false
         }
 
-        element.ondrop = function(event) {
+        var self = this
+
+        this.element.ondrop = function(event) {
             var elementType = event.dataTransfer.getData('data')
             var elementIndex = parseInt(elementType)
 
-            addElementInPreview(element, components[elementIndex])
-            
-            /*
-            switch(elementType) {
-                case 'button':
-                    addElementInPreview(element, ButtonComponent)
-                    //ButtonComponent(element)
-                    break
-
-                case 'text':
-                    addElementInPreview(element, TextComponent)
-                    //TextComponent(element)
-                    break
-            }
-            */
+            addElementInPreview(self.element, components[elementIndex])
         }
     },
 
     function() {
         
+    },
+
+    function() {
+
     }
 )

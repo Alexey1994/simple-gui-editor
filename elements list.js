@@ -1,19 +1,17 @@
-function addElementInListComponent(element, name) {
+function addElementInListComponent(element, data) {
     element.draggable = true
 
     element.ondragstart = function(event) {
-        event.dataTransfer.setData('data', name)
+        event.dataTransfer.setData('data', data)
     }
 }
 
 var ElementsListComponent = AnonimComponent(
+    'elements-list',
     [
-        [RectangleComponent, [
-            [GridComponent, [
-                /*[ButtonComponent],
-                [GridComponent, [
-                    [TextComponent]
-                ]]*/
+        ['wrapper', RectangleComponent, [
+            ['grid', GridComponent, [
+
             ]]
         ]]
     ],
@@ -22,38 +20,43 @@ var ElementsListComponent = AnonimComponent(
     [],
 
     function() {
-        var wrapper = this.view[0]
-        wrapper.padding = '20px'
 
-        var wrapperElement = wrapper[0].element
-        var wrapperStyle = wrapperElement.style
+    },
+
+    function() {
+        this.wrapper.padding = '20px'
+
+        var wrapperStyle = this.wrapper.element.style
         wrapperStyle.backgroundColor = '#fff'
 
-        var grid = this.view[0][0][0]
-        grid.columns = '100px'
-/*
-        var buttonElement = this.view[0][0][0][0][0][0].element
-        addElementInListComponent(buttonElement, 'button')
+        this.grid.columns = 'min-content'
+        this.grid.gap = '8px'
 
-        var textElement = this.view[0][0][0][0][1][0].element
-        addElementInListComponent(textElement, 'text')*/
-
-        var elementsParent = this.view[0][0][0][0].element
+        var elementsParent = this.grid.element
 
         components.forEach((component, index) => {
             var elementWrapperComponent = AnonimComponent(
+                'element',
                 [
-                    [GridComponent]
+                    ['wrapper', GridComponent]
                 ],
 
                 [],
                 [],
 
                 function() {
-                    var element = this.view[0][0].element
+
+                },
+
+                function() {
+                    this.wrapper.columns = 'auto 100px'
+                    this.wrapper.gap = '8px'
+
+                    var element = this.wrapper.element //this.view[0][0].element
                     var style = element.style
                     style.minHeight = '20px'
                     style.border = '1px solid rgba(0, 0, 0, 0)'
+                    style.whiteSpace = 'nowrap'
 
                     element.onmouseenter = function() {
                         style.border = '1px solid #000'
@@ -63,8 +66,17 @@ var ElementsListComponent = AnonimComponent(
                         style.border = '1px solid rgba(0, 0, 0, 0)'
                     }
 
+                    var elementPreview = document.createElement('div')
+                    element.appendChild(elementPreview)
+                    var drawedComponent = component(elementPreview, [])
+                    var italic = document.createElement('i')
+                    italic.innerHTML = drawedComponent.name
+                    element.appendChild(italic)
                     addElementInListComponent(element, index)
-                    component(element, [])
+                },
+
+                function() {
+
                 },
 
                 function() {
@@ -74,6 +86,10 @@ var ElementsListComponent = AnonimComponent(
 
             elementWrapperComponent(elementsParent)
         })
+    },
+
+    function() {
+
     },
 
     function() {

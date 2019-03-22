@@ -1,4 +1,4 @@
-var ScriptEditorComponent = Component(
+var ScriptEditorComponent = AnonimComponent(
     [
         ['div', [
             [TextComponent]

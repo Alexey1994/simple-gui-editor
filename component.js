@@ -1,4 +1,13 @@
-function drawComponent(name, parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
+function drawComponent(parentElement, properties) {
+    var name = properties.name || 'no-name'
+    var innerComponents = properties.structure
+    var inputs = properties.inputs || []
+    var outputs = properties.outputs || []
+    var constructor = properties.create || function() {}
+    var onInit = properties.init || function() {}
+    var onDestroy = properties.destroy || function() {}
+    var onChange = properties.change || {}
+
     var self = {name, parentElement}
     var children = []
 
@@ -71,7 +80,11 @@ function drawComponent(name, parentElement, innerComponents, inputs, outputs, co
             if(typeof inputToIndexMap[key] == 'number') {
                 var oldValue = self[key]
                 self[key] = value
-                onChange.call(self, key, value, oldValue)
+
+                var changeListener = onChange[key]
+
+                if(changeListener)
+                    changeListener.call(self, value, oldValue)
                 return
             }
 
@@ -110,15 +123,16 @@ function drawComponent(name, parentElement, innerComponents, inputs, outputs, co
 
                 if(referenceName)
                     innerComponentDescription[3] = child
-                //    self[referenceName] = child
             }
             else {
-                var child = drawComponent('inner-content', self.element || parentElement, contentComponents, [], [], function(){}, function(){}, function(){}, function(){}) //component(self.element || parentElement, contentComponents)
+                var child = drawComponent(self.element || parentElement, {
+                    name: 'inner-content',
+                    structure: contentComponents
+                })
                 children.push(child)
 
                 if(referenceName)
                     innerComponentDescription[3] = child
-                //    self[referenceName] = child
             }
 
             function updateNamespace(components) {
@@ -161,7 +175,8 @@ function destroyComponentView(componentView) {
     componentView.destroy()
 }
 
-function AnonimComponent(name, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
+function AnonimComponent(properties) {
+    var innerComponents = properties.structure
     var innerContentIndieces = []
 
     function getInnerContentIndex(nodes, innerContentPath) {
@@ -201,14 +216,14 @@ function AnonimComponent(name, innerComponents, inputs, outputs, constructor, on
             })
         //}
 
-        return drawComponent(name, parentElement, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy)
+        return drawComponent(parentElement, properties)
     }
 }
 
 var components = []
 
-function Component(name, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy) {
-    var component = AnonimComponent(name, innerComponents, inputs, outputs, constructor, onInit, onChange, onDestroy)
+function Component(params) {
+    var component = AnonimComponent(params)
     components.push(component)
     return component
 }
@@ -216,208 +231,41 @@ function Component(name, innerComponents, inputs, outputs, constructor, onInit, 
 ///////////////////////////////////////////////////////////////////////////
 
 /*
-var TextComponent = Component(
-    'text',
-    null,
-    
-    ['value'],
-    [],
+var Text = Component({
+    name: 'text',
 
-    function() {
-        this.element = document.createTextNode('text')
-    },
+    inputs: ['value'],
 
-    function() {
+    create: function() {
+        this.element = document.createTextNode('')
         this.parentElement.appendChild(this.element)
     },
 
-    function(name, newValue, oldValue) {
-        this.element.data = newValue
-    },
-
-    function() {
-        this.parentElement.removeChild(this.element)
-    }
-)
-
-var text = TextComponent(document.body)
-text.value = 'Hi'
-
-var ButtonComponent = Component(
-    'button',
-    [
-        ['text', TextComponent]
-    ],
-
-    ['text'],
-    ['click'],
-
-    function() {
-        this.element = document.createElement('button')
-    },
-
-    function() {
-        this.text.value = 'Button'
-
-        var self = this
-        this.element.onclick = function() {
-            self.click()
-        }
-
-        this.parentElement.appendChild(this.element)
-    },
-
-    function(name, newValue, oldValue) {
-        this.text = newValue
-    },
-
-    function() {
-        this.parentElement.removeChild(this.element)
-    }
-)
-
-var button = ButtonComponent(document.body)
-
-button.click = function() {
-    console.log('Hi')
-}
-
-var ListComponent = Component(
-    'list',
-    null,
-
-    ['template', 'items'],
-    ['itemChange'],
-
-    function() {
-        this.views = []
-    },
-
-    function() {
-
-    },
-
-    function(name, value) {
-        var self = this
-
-        switch(name) {
-            case 'items':
-                this.views.forEach(view => deleteView(view))
-                this.views.splice(this.views.length, 0)
-
-                this.items.forEach(function(item, index){
-                    var component = self.template(self.parentElement)
-                    component.value = item
-
-                    component.valueChange = function(data) {
-                        self.itemChange({data, index})
-                    }
-
-                    self.views[index] = component
-                })
-                break
+    change: {
+        value: function(value) {
+            this.element.data = value
         }
     },
 
-    function() {
-        this.views.forEach(view => deleteView(view))
-    }
-)
-
-var list = ListComponent(document.body)
-
-list.template = Component(
-    'text-template',
-    [
-        ['text', TextComponent]
-    ],
-
-    ['value'],
-    ['valueChange'],
-
-    function() {
-
-    },
-
-    function() {
-
-    },
-
-    function(name, value) {
-        this.text.value = value
-    },
-
-    function() {
-
-    }
-)
-
-list.items = [1, 2, 8]
-
-var DivComponent = Component(
-    'div',
-    null,
-
-    [],
-    [],
-
-    function() {
-        this.element = document.createElement('div')
-    },
-
-    function() {
-        this.parentElement.appendChild(this.element)
-    },
-
-    function(name, newValue, oldValue) {
-
-    },
-
-    function() {
+    destroy: function(component) {
         this.parentElement.removeChild(this.element)
     }
-)
+})
 
-var EmptyComponent = Component(
-    'empty',
-    null,
-
-    [],
-    [],
-
-    function() {
-
-    },
-
-    function() {
-
-    },
-
-    function() {
-
-    },
-
-    function() {
-
-    }
-)
-
-var RectangleComponent = Component(
-    'rectangle',
-    [
-        //['wrapper', DivComponent, 'inner-content']
+var Rectangle = Component({
+    name: 'rectangle',
+    structure: [
         ['wrapper', null, 'inner-content']
     ],
 
-    ['1'],
-    [],
+    inputs: ['1'],
 
-    function() {
+    create: function() {
         this.element = document.createElement('div')
         this.parentElement.appendChild(this.element)
     },
 
-    function() {
+    init: function() {
         //console.log(this.parentElement, this.children[0].element)
 
         //console.log(this.parentElement)
@@ -426,46 +274,21 @@ var RectangleComponent = Component(
         this.element.style.backgroundColor = 'red'
     },
 
-    function(name, newValue, oldValue) {
-
-    },
-
-    function() {
+    destroy: function() {
         this.parentElement.removeChild(this.element)
     }
-)
+})
 
-//var rectangle = RectangleComponent(document.body, [[ButtonComponent]])
-
-var TempComponent = Component(
-    'temp',
-    [
-        [RectangleComponent, [
-            ['asdf', TextComponent],
-            [ButtonComponent]
+var Page = Component({
+    structure: [
+        [Rectangle, [
+            ['text', Text]
         ]]
     ],
 
-    [],
-    [],
-
-    function() {
-
-    },
-
-    function() {
-        this.asdf.value = 'Hidkfjs'
-    },
-
-    function(name, newValue, oldValue) {
-
-    },
-
-    function() {
-
+    init: function(component) {
+        this.text.value = 'dsfds'
     }
-)
+})
 
-var t = TempComponent(document.body)
-//destroyComponentView(t)
-*/
+Page(document.body)*/

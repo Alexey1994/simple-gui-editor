@@ -21,56 +21,61 @@
     </style>
 </head>
 <body>
+    <!--script src="component compilation.js"></script-->
+
     <div id="view"></div>
     <div id="content"></div>
 
     <script src="text width.js"></script>
     <script src="component.js"></script>
     <script src="components.js"></script>
-
     <script src="elements list.js"></script>
-    <script src="editor preview.js"></script>
-    <script src="script editor.js"></script>
+    <script src="component preview.js"></script>
     <script src="element editor.js"></script>
+    <script src="component structure.js"></script>
 
     <script>
         var elementEditor
+        var structureEditor
 
-        var PageComponent = AnonimComponent(
-            'page',
-            [
-                ['wrapper', GridComponent, [
-                    [ElementsListComponent],
-                    [EditorPreviewComponent],
-                    ['elementEditor', ElementEditorComponent]
+        var Page = AnonimComponent({
+            name: 'page',
+            
+            structure: [
+                ['wrapper', Grid, [
+                    [ElementsList],
+                    [EditorPreview],
+                    ['tabs', TabPanel]
                 ]]
             ],
 
-            [],
-            [],
-
-            function() {
-
-            },
-
-            function() {
+            init: function() {
                 this.wrapper.columns = 'min-content auto min-content'
                 this.wrapper.gap = '20px'
                 this.wrapper.height = '100%'
 
-                elementEditor = this.elementEditor
-            },
+                this.tabs.tabNames = ['Element', 'Structure']
+                this.tabs.pages = [ElementEditor, ComponentStructure]
 
-            function() {
+                this.tabs.tabChanged = function(tab) {
+                    if(tab.name == 'Element') {
+                        elementEditor = tab.tab
+                        //elementEditor.element = selectedElement
+                    }
+                    else
+                        elementEditor = undefined
 
-            },
-
-            function() {
-
+                    if(tab.name == 'Structure') {
+                        structureEditor = tab.tab
+                        structureEditor.structure = structure
+                    }
+                    else
+                        structureEditor = undefined
+                }
             }
-        )
+        })
 
-        //var page = PageComponent(document.querySelector('#content'))
+        var page = Page(document.querySelector('#content'))
     </script>
 </body>
 </html>

@@ -1,12 +1,13 @@
-var ElementEditorComponent = AnonimComponent(
-    'component-editor',
-    [
-        ['wrapper', RectangleComponent, [
-            ['list', ListComponent]
+var ElementEditor = AnonimComponent({
+    name: 'component-editor',
+    
+    structure: [
+        ['wrapper', Rectangle, [
+            ['list', List]
         ]],
 
-        [RectangleComponent, [
-            [GridComponent, [
+        [Rectangle, [
+            [Grid, [
                 //[TextComponent]
             ]]
         ]],
@@ -14,58 +15,46 @@ var ElementEditorComponent = AnonimComponent(
         //[ScriptEditorComponent]
     ],
 
-    ['element'],
-    [],
+    inputs: ['element'],
 
-    function() {
-
-    },
-
-    function() {
+    init: function() {
         this.wrapper.padding = '20px'
         this.wrapper.element.style.backgroundColor = '#fff'
 
-        this.list.template = AnonimComponent(
-            'list-item',
-            [
+        this.list.template = AnonimComponent({
+            name: 'list-item',
+
+            structure: [
                 ['grid', GridComponent, [
                     ['inputName', TextComponent],
                     ['inputValue', InputComponent]
                 ]]
             ],
 
-            ['value'],
-            ['valueChange'],
+            inputs: ['value'],
+            outputs: ['valueChange'],
 
-            function() {
-
-            },
-
-            function () {
+            init: function () {
                 this.grid.columns = 'min-content auto'
                 this.grid.gap = '10px'
             },
 
-            function (name, value, valueChange) {
-                this.inputName.value = value.inputName
-                this.inputValue.value = JSON.stringify(value.wrappedElement[value.inputName])
+            change: {
+                value: function(value) {
+                    this.inputName.value = value.inputName
+                    this.inputValue.value = JSON.stringify(value.wrappedElement[value.inputName])
 
-                this.inputValue.valueChange = function(newValue) {
-                    value.wrappedElement[value.inputName] = JSON.parse(newValue)
+                    this.inputValue.valueChange = function(newValue) {
+                        value.wrappedElement[value.inputName] = JSON.parse(newValue)
+                    }
                 }
-            },
-
-            function() {
-
             }
-        )
+        })
     },
 
-    function(name, value) {
-        this.list.items = value.self.wrappedComponent.inputs.map(inputName => ({inputName, element: this.element, wrappedElement: value.self.wrappedComponent}))
-    },
-
-    function() {
-
+    change: {
+        element: function(element) {
+            this.list.items = element.self.wrappedComponent.inputs.map(inputName => ({inputName, element: this.element, wrappedElement: element.self.wrappedComponent}))
+        }
     }
-)
+})

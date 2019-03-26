@@ -6,93 +6,57 @@ function addElementInListComponent(element, data) {
     }
 }
 
-var ElementsListComponent = AnonimComponent(
-    'elements-list',
-    [
-        ['wrapper', RectangleComponent, [
-            ['grid', GridComponent, [
+var ElementsList = AnonimComponent({
+    name: 'elements-list',
 
-            ]]
+    structure: [
+        ['wrapper', Rectangle, [
+            ['grid', Grid]
         ]]
     ],
 
-    [],
-    [],
-
-    function() {
-
-    },
-
-    function() {
+    init: function() {
         this.wrapper.padding = '20px'
+        this.wrapper.color = '#fff'
 
-        var wrapperStyle = this.wrapper.element.style
-        wrapperStyle.backgroundColor = '#fff'
-
-        this.grid.columns = 'min-content'
+        //this.grid.rows = 'min-content min-content min-content min-content min-content'
         this.grid.gap = '8px'
 
-        var elementsParent = this.grid.element
-
         components.forEach((component, index) => {
-            var elementWrapperComponent = AnonimComponent(
-                'element',
-                [
-                    ['wrapper', GridComponent]
+            var elementWrapperComponent = AnonimComponent({
+                name: 'element',
+
+                structure: [
+                    ['wrapper', Grid, [
+                        ['preview', Rectangle],
+                        ['name', Text]
+                    ]]
                 ],
 
-                [],
-                [],
-
-                function() {
-
-                },
-
-                function() {
+                init: function() {
                     this.wrapper.columns = 'auto 100px'
                     this.wrapper.gap = '8px'
 
-                    var element = this.wrapper.element //this.view[0][0].element
-                    var style = element.style
+                    var style = this.wrapper.element.style
                     style.minHeight = '20px'
                     style.border = '1px solid rgba(0, 0, 0, 0)'
-                    style.whiteSpace = 'nowrap'
 
-                    element.onmouseenter = function() {
+                    this.wrapper.element.onmouseenter = function() {
                         style.border = '1px solid #000'
                     }
 
-                    element.onmouseleave = function() {
+                    this.wrapper.element.onmouseleave = function() {
                         style.border = '1px solid rgba(0, 0, 0, 0)'
                     }
 
-                    var elementPreview = document.createElement('div')
-                    element.appendChild(elementPreview)
-                    var drawedComponent = component(elementPreview, [])
-                    var italic = document.createElement('i')
-                    italic.innerHTML = drawedComponent.name
-                    element.appendChild(italic)
-                    addElementInListComponent(element, index)
-                },
-
-                function() {
-
-                },
-
-                function() {
-
+                    this.drawedComponent = component(this.preview.element, [])
+                    this.name.style = 'italic'
+                    this.name.value = this.drawedComponent.name
+                    addElementInListComponent(this.wrapper.element, index)
                 }
-            )
+            })
 
-            elementWrapperComponent(elementsParent)
+            elementWrapperComponent(this.grid.element)
         })
-    },
-
-    function() {
-
-    },
-
-    function() {
-
     }
-)
+})

@@ -7,7 +7,7 @@ function addElementInListComponent(element, data) {
 }
 
 var ElementsList = AnonimComponent({
-    name: 'elements-list',
+    name: 'ElementsList',
 
     structure: [
         ['wrapper', Rectangle, [

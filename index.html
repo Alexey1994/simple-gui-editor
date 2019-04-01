@@ -14,7 +14,7 @@
             background-color: #aaa;
         }
 
-        #content
+        #content, .ace_editor
         {
             height: 100%;
         }
@@ -24,7 +24,14 @@
     <!--script src="component compilation.js"></script-->
 
     <div id="view"></div>
-    <div id="content"></div>
+    <div id="content">
+        <button onclick="stringifyComponent()">Stringify</button>
+    </div>
+
+    <script src="ace/ace.js"></script>
+    <script src="ace/mode-javascript.js"></script>
+    <!--script src="ace/theme-monokai.js"></script-->
+    <script src="ace/snippets/javascript.js"></script>
 
     <script src="text width.js"></script>
     <script src="component.js"></script>
@@ -33,49 +40,132 @@
     <script src="component preview.js"></script>
     <script src="element editor.js"></script>
     <script src="component structure.js"></script>
+    <script src="code editor.js"></script>
+    <script src="inputs and outputs editor.js"></script>
 
     <script>
         var elementEditor
         var structureEditor
+        var inputsAndOutputsEditor
+
+        var createScript = '// Create script'
+        var initScript = '// Init script'
+        var changeScript = '// Change script'
+        var destroyScript = '// Destroy script'
 
         var Page = AnonimComponent({
-            name: 'page',
+            name: 'Page',
             
             structure: [
-                ['wrapper', Grid, [
-                    [ElementsList],
-                    [EditorPreview],
-                    ['tabs', TabPanel]
+                ['mainLayout', Grid, [
+                    ['topLayout', Grid, [
+                        [ElementsList],
+                        ['componentPreviewWrapper', Rectangle, [
+                            [ComponentPreview]
+                        ]],
+                        ['tabs', TabPanel]
+                    ]],
+
+                    ['bottomLayout', Grid, [
+                        ['scriptTabPanel', TabPanel],
+                        ['inputsAndOutputsEditor', InputsAndOutputsEditor]
+                        //['codeEditor', CodeEditor]
+                    ]]
                 ]]
             ],
 
             init: function() {
-                this.wrapper.columns = 'min-content auto min-content'
-                this.wrapper.gap = '20px'
-                this.wrapper.height = '100%'
+                this.mainLayout.rows = 'calc(100% - 200px) 200px'
+                this.mainLayout.gap = '20px'
+
+                this.topLayout.columns = 'min-content auto min-content'
+                this.topLayout.gap = '20px'
+                this.topLayout.height = '100%'
+
+                this.componentPreviewWrapper.color = '#fff'
 
                 this.tabs.tabNames = ['Element', 'Structure']
                 this.tabs.pages = [ElementEditor, ComponentStructure]
 
-                this.tabs.tabChanged = function(tab) {
-                    if(tab.name == 'Element') {
-                        elementEditor = tab.tab
+                this.tabs.tabChanged = {
+                    'Element': tab => {
+                        elementEditor = tab
+                        structureEditor = undefined
                         //elementEditor.element = selectedElement
-                    }
-                    else
-                        elementEditor = undefined
+                    },
 
-                    if(tab.name == 'Structure') {
-                        structureEditor = tab.tab
+                    'Structure': tab => {
+                        elementEditor = undefined
+                        structureEditor = tab
                         structureEditor.structure = structure
                     }
-                    else
-                        structureEditor = undefined
                 }
+
+                this.bottomLayout.columns = 'auto min-content'
+                this.bottomLayout.gap = '20px'
+
+                this.scriptTabPanel.tabNames = ['Create', 'Init', 'Change', 'Destroy']
+                this.scriptTabPanel.pages = [CodeEditor, CodeEditor, CodeEditor, CodeEditor]
+
+                this.scriptTabPanel.tabChanged = {
+                    'Create': tab => {
+                        tab.value = createScript
+                        tab.valueChange = newScript => createScript = newScript
+                    },
+
+                    'Init': tab => {
+                        tab.value = initScript
+                        tab.valueChange = newScript => initScript = newScript
+                    },
+
+                    'Change': tab => {
+                        tab.value = changeScript
+                        tab.valueChange = newScript => changeScript = newScript
+                    },
+
+                    'Destroy': tab => {
+                        tab.value = destroyScript
+                        tab.valueChange = newScript => destroyScript = newScript
+                    }
+                }
+
+                /*tab => {
+                    switch(tab.name) {
+                        case 'Create':
+                            tab.tab.value = 'Hi'
+                            break
+                    }
+                    console.log(tab)
+                }*/
+
+                inputsAndOutputsEditor = this.inputsAndOutputsEditor
             }
         })
 
         var page = Page(document.querySelector('#content'))
+    </script>
+
+    <script>
+        function stringifyComponent() {
+            var inputs = inputsAndOutputsEditor.self.inputs
+            var outputs = inputsAndOutputsEditor.self.outputs
+
+            var newStructure = structure.map(structureElement => [structureElement.element.self.wrappedComponent.name])
+
+            var component = {
+                structure: newStructure,
+
+                inputs,
+                outputs,
+
+                create: createScript,
+                init: initScript,
+                change: changeScript,
+                destroy: destroyScript
+            }
+
+            console.log(component)
+        }
     </script>
 </body>
 </html>

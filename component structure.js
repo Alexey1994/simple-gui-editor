@@ -1,5 +1,5 @@
 var ComponentStructure = AnonimComponent({
-    name: 'component-structure',
+    name: 'ComponentStructure',
 
     structure: [
         ['wrapper', Rectangle, [
@@ -10,12 +10,16 @@ var ComponentStructure = AnonimComponent({
     inputs: ['structure'],
 
     init: function() {
+        this.wrapper.color = '#cacaca'
+        this.wrapper.padding = '10px 0'
+        this.wrapper.width = '100%'
+
         this.list.template = AnonimComponent({
             name: 'component-structure-node',
 
             structure: [
-                ['wrapper', RectangleComponent, [
-                    ['text', TextComponent]
+                ['wrapper', Rectangle, [
+                    ['text', Text]
                 ]]
             ],
 
@@ -23,7 +27,9 @@ var ComponentStructure = AnonimComponent({
             outputs: ['valueChange'],
 
             init: function() {
-                this.wrapper.color = '#fff'
+                this.wrapper.color = '#eee'
+                this.wrapper.width = '100%'
+                this.wrapper.margin = '2px 0'
             },
 
             change: {
@@ -36,7 +42,7 @@ var ComponentStructure = AnonimComponent({
 
     change: {
         structure: function(structure) {
-            this.list.items = structure
+            this.list.items = structure.map(elemenetDescription => elemenetDescription.element)
         }
     }
 })

@@ -55,6 +55,9 @@ function drawComponent(parentElement, properties) {
             if(key == 'element')
                 return self.element
 
+            if(key == 'structure')
+                return innerComponents
+
             if(key == 'inputs')
                 return inputs
 
@@ -100,6 +103,10 @@ function drawComponent(parentElement, properties) {
     constructor.call(self)
 
     if(innerComponents) {
+        if(innerComponents === 'inner-content') {
+            return
+        }
+
         innerComponents.forEach(innerComponentDescription => {
             var referenceName
             var component
@@ -115,6 +122,10 @@ function drawComponent(parentElement, properties) {
                 component = innerComponentDescription[0]
                 contentComponents = innerComponentDescription[1]
                 referenceName = undefined
+            }
+
+            if(contentComponents === 'inner-content') {
+                console.error(innerComponentDescription)
             }
 
             if(component) {
@@ -156,7 +167,7 @@ function drawComponent(parentElement, properties) {
                     if(referenceName)
                         self[referenceName] = componentDescription[3]
 
-                    if(contentComponents)
+                    if(contentComponents && contentComponents !== 'inner-content')
                         updateNamespace(contentComponents)
                 })
             }
@@ -186,8 +197,9 @@ function AnonimComponent(properties) {
                 ? 2
                 : 1
 
-            if(node[innerContentShift] === 'inner-content')
-                innerContentIndieces.push(innerContentPath.concat([index]))
+            if(node[innerContentShift] == 'inner-content') {
+                innerContentIndieces.push(innerContentPath.concat([index, innerContentShift]))
+            }
             else if(Array.isArray(node[innerContentShift])) {
                 innerContentPath.push(index)
                 getInnerContentIndex(node[innerContentShift], innerContentPath)
@@ -197,24 +209,33 @@ function AnonimComponent(properties) {
     }
 
     if(innerComponents)
-        getInnerContentIndex(innerComponents, innerContentIndieces)
+        getInnerContentIndex(innerComponents, [])
 
     return function(parentElement, contentComponents) {
         //if(contentComponents) {
             innerContentIndieces.forEach(function(index){
                 var innerIndexNode = innerComponents
-
-                for(var i = 0; i < index.length; ++i)
+//console.log(JSON.stringify(innerIndexNode), JSON.stringify(index))
+                for(var i = 0; i < index.length - 1; ++i)
                     innerIndexNode = innerIndexNode[index[i]]
 
-                var isNamed = typeof innerIndexNode[0] == 'string'
-                var innerContentShift = isNamed
-                    ? 2
-                    : 1
+                //console.log(JSON.stringify(innerIndexNode), index[index.length - 1])
 
-                innerIndexNode[innerContentShift] = contentComponents
+                //console.log(innerIndexNode[index[index.length - 1] + 2])
+
+                var t = innerIndexNode[index[index.length - 1] + 4]
+
+                if(!t)
+                    innerIndexNode[index[index.length - 1] + 4] = contentComponents
+                console.log(contentComponents)
+                innerIndexNode[index[index.length - 1]] = contentComponents
+                //}
+                //console.log(index)
+                //console.log(JSON.stringify(innerIndexNode), innerIndexNode)
             })
         //}
+
+        //console.log(JSON.stringify(innerComponents))
 
         return drawComponent(parentElement, properties)
     }

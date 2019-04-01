@@ -1,47 +1,106 @@
 var structure = []
 var selectedComponent
 
+function componentViewHasInnerContent(componentView) {
+    function nodeHasInnerContent(structureNode) {
+        var name
+        var component
+        var innerContent
+
+        if(typeof structureNode[0] == 'string') {
+            name = structureNode[0]
+            component = structureNode[1]
+            innerContent = structureNode[2]
+        }
+        else {
+            component = structureNode[0]
+            innerContent = structureNode[1]
+        }
+
+        if(!component)
+            return true
+    }
+
+    var structure = componentView.structure
+
+    if(structure) 
+        for(var structureNode of componentView.structure)
+            if(nodeHasInnerContent(structureNode))
+                return true
+
+    return false
+}
+
 function addElementInPreview(parent, component) {
+    var elementWrapper = {}
     var element
 
-    var Element = AnonimComponent({
-        name: 'element-preview',
+    var ElementPreview = AnonimComponent({
+        name: 'ElementPreview',
         
         structure: [
-            ['rectangle', Rectangle, [
-                ['wrappedComponent', component]
+            ['wrapper', Rectangle, [
+                ['wrappedComponent', component, 'inner-content']
+                //['wrappedComponent', component]
             ]]
         ],
 
         init: function() {
-            this.rectangle.element.onclick = function() {
+            elementWrapper.hasInnerContent = componentViewHasInnerContent(this.wrappedComponent)
+
+            if(elementWrapper.hasInnerContent) {
+                elementWrapper.structure = []
+
+                this.wrapper.element.ondrop = event => {
+                    event.stopPropagation()
+                    console.log('drop inner content')
+
+                    var elementType = event.dataTransfer.getData('data')
+                    var elementIndex = parseInt(elementType)
+                    var droppedComponent = components[elementIndex]
+
+                    //addElementInPreview(this.element, droppedComponent)
+                    //addElementInPreview(document.body, droppedComponent)
+
+                    elementWrapper.structure.push([droppedComponent])
+
+                    console.log(elementWrapper.structure)
+                    destroyComponentView(element)
+                    element = ElementPreview(parent, elementWrapper.structure)
+                    //element = component(parent, elementWrapper.structure)
+                    elementWrapper.element = element
+                }
+            }
+
+            this.wrapper.element.onclick = () => {
                 selectedComponent = element
 
                 if(elementEditor)
                     elementEditor.element = element
             }
 
-            this.rectangle.element.onmouseenter = () => {
-                this.rectangle.element.style.outline = '1px solid #000'
+            this.wrapper.element.onmouseenter = () => {
+                this.wrapper.element.style.outline = '1px solid #000'
             }
 
-            this.rectangle.element.onmouseleave = () => {
-                this.rectangle.element.style.outline = 'none'
+            this.wrapper.element.onmouseleave = () => {
+                this.wrapper.element.style.outline = 'none'
             }
         }
     })
 
-    element = Element(parent)
+    element = ElementPreview(parent, ['yes'])
     selectedComponent = element
 
     if(elementEditor)
         elementEditor.element = element
     
-    structure.push(element)
+    elementWrapper.element = element
+    structure.push(elementWrapper)
 }
 
-var EditorPreview = AnonimComponent({
-    name: 'component-preview',
+var ComponentPreview = AnonimComponent({
+    name: 'ComponentPreview',
 
     create: function() {
         this.element = document.createElement('div')
@@ -62,8 +121,9 @@ var EditorPreview = AnonimComponent({
         this.element.ondrop = event => {
             var elementType = event.dataTransfer.getData('data')
             var elementIndex = parseInt(elementType)
+            var droppedComponent = components[elementIndex]
 
-            addElementInPreview(this.element, components[elementIndex])
+            addElementInPreview(this.element, droppedComponent)
         }
     },
 

@@ -1,10 +1,11 @@
 var Text = Component({
-    name: 'text',
+    name: 'Text',
     
     inputs: ['value', 'style'],
 
     create: function() {
         this.element = document.createElement('span')
+        this.element.style.whiteSpace = 'nowrap'
         this.textNode = document.createTextNode('')
         this.element.appendChild(this.textNode)
 
@@ -31,7 +32,7 @@ var Text = Component({
 })
 
 var Button = Component({
-    name: 'button',
+    name: 'Button',
 
     structure: [
         ['textOnButton', Text]
@@ -56,8 +57,8 @@ var Button = Component({
     },
 
     change: {
-        value: function(value) {
-            this.textOnButton.value = value
+        text: function(text) {
+            this.textOnButton.value = text
         }
     },
 
@@ -67,7 +68,7 @@ var Button = Component({
 })
 
 var Input = Component({
-    name: 'input',
+    name: 'Input',
     
     inputs: ['value'],
     outputs: ['valueChange'],
@@ -95,8 +96,8 @@ var Input = Component({
     }
 })
 
-var Select = Component({
-    name: 'dropdown',
+var Dropdown = Component({
+    name: 'Dropdown',
 
     inputs: ['items', 'selectedItemIndex'],
     outputs: ['selectedItemIndexChanged'],
@@ -134,7 +135,7 @@ var Select = Component({
 })
 
 var NameEditor = Component({
-    name: 'name-editor',
+    name: 'NameEditor',
 
     inputs: ['value'],
     outputs: ['valueChange'],
@@ -181,13 +182,13 @@ var NameEditor = Component({
 })
 
 var Grid = Component({
-    name: 'grid',
+    name: 'Grid',
 
     structure: [
         [null, 'inner-content']
     ],
 
-    inputs: ['rows', 'columns', 'gap', 'height'],
+    inputs: ['rows', 'columns', 'gap'],
 
     create: function() {
         this.element = document.createElement('div')
@@ -204,9 +205,7 @@ var Grid = Component({
     change: {
         rows:    function(rows)    { this.element.style.gridTemplateRows = rows },
         columns: function(columns) { this.element.style.gridTemplateColumns = columns },
-        gap:     function(gap)     { this.element.style.gap = gap },
-        rows:    function(rows)    { this.element.style.gridTemplateRows = rows },
-        rows:    function(rows)    { this.element.style.gridTemplateRows = rows }
+        gap:     function(gap)     { this.element.style.gap = gap }
     },
 
     function() {
@@ -215,7 +214,7 @@ var Grid = Component({
 })
 
 var Scroll = Component({
-    name: 'scroll',
+    name: 'Scroll',
 
     structure: [
         [null, 'inner-content']
@@ -239,7 +238,7 @@ var Scroll = Component({
 })
 
 var Rectangle = Component({
-    name: 'rectangle',
+    name: 'Rectangle',
 
     structure: [
         [null, 'inner-content']
@@ -269,8 +268,42 @@ var Rectangle = Component({
     }
 })
 
+var Rectangle2 = Component({
+    name: 'Rectangle',
+
+    structure: [
+        [null, 'inner-content']
+    ],
+
+    inputs: ['width', 'height', 'margin', 'padding', 'color'],
+
+    create: function() {
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
+    },
+
+    init: function() {
+        this.element.style.display = 'inline-block'
+        this.element.style.width = '100px'
+        this.element.style.height = '100px'
+        this.element.style.backgroundColor = 'red'
+    },
+
+    change: {
+        width:   function(width)   {this.element.style.width = width},
+        height:  function(height)  {this.element.style.height = height},
+        margin:  function(margin)  {this.element.style.margin = margin},
+        padding: function(padding) {this.element.style.padding = padding},
+        color:   function(color)   {this.element.style.backgroundColor = color}
+    },
+
+    destroy: function() {
+        this.parentElement.removeChild(this.element)
+    }
+})
+
 var List = Component({
-    name: 'list',
+    name: 'List',
 
     inputs: ['template', 'items'],
     outputs: ['itemChange'],
@@ -284,7 +317,7 @@ var List = Component({
             var self = this
 
             this.views.forEach(view => destroyComponentView(view))
-            this.views.splice(this.views.length, 0)
+            this.views.splice(0, this.views.length)
 
             this.items.forEach((item, index) => {
                 var component = this.template(this.parentElement)
@@ -305,70 +338,70 @@ var List = Component({
 })
 
 var TabPanel = Component({
-    name: 'tab-panel',
+    name: 'TabPanel',
 
     structure: [
         ['wrapper', Grid, [
-            ['head', Rectangle, [
+            ['head', Grid, [
                 ['headList', List]
             ]],
             ['page', Rectangle]
         ]]
     ],
 
-    inputs: ['tabNames', 'pages'],
-    outputs: ['tabChanged'],
+    inputs: ['tabNames', 'pages', 'tabChanged'],
+    //outputs: ['tabChanged'],
 
     init: function() {
         var tabPanel = this
         this.wrapper.rows = 'min-content auto'
 
-        this.headList.template = AnonimComponent(
-            'tab-panel-head',
+        this.headList.template = AnonimComponent({
+            name: 'tab-panel-head',
 
-            [
+            structure: [
                 [Rectangle, [
-                        ['navigationButton', Button]
+                    ['navigationButton', Button]
                 ]]
             ],
 
-            ['value'],
-            ['valueChange'],
+            inputs: ['value'],
+            outputs: ['valueChange'],
 
-            function() {
+            change: {
+                value: function(value) {
+                    this.navigationButton.text = value
 
-            },
-
-            function() {
-
-            },
-
-            function(name, value) {
-                var self = this
-                this.navigationButton.text = value
-
-                this.navigationButton.click = function() {
-                    self.valueChange(self.value)
+                    this.navigationButton.click = () => {
+                        this.valueChange(value)
+                    }
                 }
-            },
-
-            function() {
-
             }
-        )
+        })
 
         this.headList.itemChange = function(selectedTab) {
             if(tabPanel.selectedTab)
                 destroyComponentView(tabPanel.selectedTab)
 
             tabPanel.selectedTab = tabPanel.pages[selectedTab.index](tabPanel.page.element)
-            tabPanel.tabChanged({tab: tabPanel.selectedTab, name: selectedTab.data})
+            
+            var tabChangedHandler = tabPanel.tabChanged[selectedTab.data]
+
+            if(tabChangedHandler)
+                tabChangedHandler(tabPanel.selectedTab)
+
+            //tabPanel.tabChanged({tab: tabPanel.selectedTab, name: selectedTab.data})
         }
     },
 
     change: {
         tabNames: function(tabNames) {
+            this.head.columns = 'min-content '.repeat(tabNames.length)
             this.headList.items = tabNames
+        },
+
+        pages: function(pages) {
+            this.pages = pages
         }
     }
 })

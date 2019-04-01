@@ -1,5 +1,5 @@
 var ElementEditor = AnonimComponent({
-    name: 'component-editor',
+    name: 'ElementEditor',
     
     structure: [
         ['wrapper', Rectangle, [
@@ -18,16 +18,17 @@ var ElementEditor = AnonimComponent({
     inputs: ['element'],
 
     init: function() {
-        this.wrapper.padding = '20px'
-        this.wrapper.element.style.backgroundColor = '#fff'
+        this.wrapper.padding = '10px 0'
+        this.wrapper.color = '#cacaca'
+        this.wrapper.width = '100%'
 
         this.list.template = AnonimComponent({
-            name: 'list-item',
+            name: 'element-input-list-item',
 
             structure: [
-                ['grid', GridComponent, [
-                    ['inputName', TextComponent],
-                    ['inputValue', InputComponent]
+                ['grid', Grid, [
+                    ['inputName', Text],
+                    ['inputValue', Input]
                 ]]
             ],
 

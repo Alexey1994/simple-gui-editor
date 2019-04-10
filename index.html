@@ -30,7 +30,6 @@
 
     <script src="ace/ace.js"></script>
     <script src="ace/mode-javascript.js"></script>
-    <!--script src="ace/theme-monokai.js"></script-->
     <script src="ace/snippets/javascript.js"></script>
 
     <script src="text width.js"></script>
@@ -69,7 +68,6 @@
                     ['bottomLayout', Grid, [
                         ['scriptTabPanel', TabPanel],
                         ['inputsAndOutputsEditor', InputsAndOutputsEditor]
-                        //['codeEditor', CodeEditor]
                     ]]
                 ]]
             ],
@@ -167,5 +165,27 @@
             console.log(component)
         }
     </script>
+
+    <!--script src="text width.js"></script>
+    <script src="component.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        var T = Component({
+            name: 'TestComponent',
+
+            structure: [
+                ['1', Rectangle2, [
+                    ['2', Rectangle2, 'inner-content']
+                ]]
+            ],
+
+            init: function() {
+
+            }
+        })
+
+        var t = T(document.body, [[Button]])
+    </script-->
 </body>
 </html>

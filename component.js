@@ -100,6 +100,7 @@ function drawComponent(parentElement, properties) {
         }
     })
 
+    self.root = proxy
     constructor.call(self)
 
     if(innerComponents) {
@@ -164,8 +165,10 @@ function drawComponent(parentElement, properties) {
                         referenceName = undefined
                     }
 
-                    if(referenceName)
+                    if(referenceName) {
                         self[referenceName] = componentDescription[3]
+                        //delete componentDescription[3]
+                    }
 
                     if(contentComponents && contentComponents !== 'inner-content')
                         updateNamespace(contentComponents)
@@ -197,14 +200,15 @@ function AnonimComponent(properties) {
                 ? 2
                 : 1
 
-            if(node[innerContentShift] == 'inner-content') {
-                innerContentIndieces.push(innerContentPath.concat([index, innerContentShift]))
-            }
-            else if(Array.isArray(node[innerContentShift])) {
-                innerContentPath.push(index)
+            innerContentPath.push(index, innerContentShift)
+
+            if(node[innerContentShift] == 'inner-content')
+                innerContentIndieces.push(innerContentPath.concat([]))
+            else if(Array.isArray(node[innerContentShift]))
                 getInnerContentIndex(node[innerContentShift], innerContentPath)
-                innerContentPath.pop()
-            }
+
+            innerContentPath.pop()
+            innerContentPath.pop()
         })
     }
 
@@ -215,27 +219,23 @@ function AnonimComponent(properties) {
         //if(contentComponents) {
             innerContentIndieces.forEach(function(index){
                 var innerIndexNode = innerComponents
-//console.log(JSON.stringify(innerIndexNode), JSON.stringify(index))
+
                 for(var i = 0; i < index.length - 1; ++i)
                     innerIndexNode = innerIndexNode[index[i]]
 
-                //console.log(JSON.stringify(innerIndexNode), index[index.length - 1])
+                //console.log(properties.name + ':')
+                //console.log('indices', JSON.stringify(innerContentIndieces))
+                //console.log('before', JSON.stringify(innerIndexNode), index[index.length - 1], contentComponents)
+                //console.log('structure', JSON.stringify(innerComponents))
 
-                //console.log(innerIndexNode[index[index.length - 1] + 2])
-
-                var t = innerIndexNode[index[index.length - 1] + 4]
-
-                if(!t)
-                    innerIndexNode[index[index.length - 1] + 4] = contentComponents
-                console.log(contentComponents)
+                //innerIndexNode[4] = contentComponents
                 innerIndexNode[index[index.length - 1]] = contentComponents
-                //}
-                //console.log(index)
-                //console.log(JSON.stringify(innerIndexNode), innerIndexNode)
+
+                //console.log('after', JSON.stringify(innerIndexNode), index[index.length - 1], contentComponents)
+                //console.log('structure', JSON.stringify(innerComponents))
+                //console.log('')
             })
         //}
-
-        //console.log(JSON.stringify(innerComponents))
 
         return drawComponent(parentElement, properties)
     }

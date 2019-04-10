@@ -31,72 +31,85 @@ function componentViewHasInnerContent(componentView) {
     return false
 }
 
-function addElementInPreview(parent, component) {
-    var elementWrapper = {}
-    var element
+var highlightedPreview
 
-    var ElementPreview = AnonimComponent({
-        name: 'ElementPreview',
-        
+function createElementWrapper(parentElement, parentStructure, parentStructureDescription, component) {
+    var ElementPreviewNode = AnonimComponent({
+        name: 'element-preview-node',
+
         structure: [
             ['wrapper', Rectangle, [
-                ['wrappedComponent', component, 'inner-content']
-                //['wrappedComponent', component]
+                ['wrappedComponent', component, parentStructure]
             ]]
         ],
 
         init: function() {
-            elementWrapper.hasInnerContent = componentViewHasInnerContent(this.wrappedComponent)
+            this.wrapper.element.style.display = 'inline'
 
-            if(elementWrapper.hasInnerContent) {
-                elementWrapper.structure = []
+            //console.log(componentViewHasInnerContent(this.root))
 
-                this.wrapper.element.ondrop = event => {
-                    event.stopPropagation()
-                    console.log('drop inner content')
+            this.wrapper.element.ondrop = event => {
+                event.stopPropagation()
 
-                    var elementType = event.dataTransfer.getData('data')
-                    var elementIndex = parseInt(elementType)
-                    var droppedComponent = components[elementIndex]
+                var elementType = event.dataTransfer.getData('data')
+                var elementIndex = parseInt(elementType)
+                var droppedComponent = components[elementIndex]
 
-                    //addElementInPreview(this.element, droppedComponent)
-                    //addElementInPreview(document.body, droppedComponent)
+                var innerStructureDescription = []
 
-                    elementWrapper.structure.push([droppedComponent])
+                parentStructureDescription.push({
+                    element: this.root,
+                    innerStructureDescription
+                })
 
-                    console.log(elementWrapper.structure)
-                    destroyComponentView(element)
-                    element = ElementPreview(parent, elementWrapper.structure)
-                    //element = component(parent, elementWrapper.structure)
-                    elementWrapper.element = element
-                }
+                parentStructure.push([createElementWrapper(parentElement, [], innerStructureDescription, droppedComponent)])
+                updatePreview(parentElement)
             }
 
-            this.wrapper.element.onclick = () => {
-                selectedComponent = element
+            this.wrapper.element.onclick = event => {
+                event.stopPropagation()
 
+                selectedComponent = this.root
+                //console.log(this)
                 if(elementEditor)
-                    elementEditor.element = element
+                    elementEditor.element = this.root
             }
 
-            this.wrapper.element.onmouseenter = () => {
+            this.wrapper.element.onmousemove = (event) => {
+                event.stopPropagation()
+
+                if(highlightedPreview)
+                    highlightedPreview.element.style.outline = 'none'
+
+                highlightedPreview = this.wrapper
                 this.wrapper.element.style.outline = '1px solid #000'
             }
 
-            this.wrapper.element.onmouseleave = () => {
+            this.wrapper.element.onmouseleave = (event) => {
+                event.stopPropagation()
+
+                if(this.wrapper == highlightedPreview)
+                    highlightedPreview = undefined
+
                 this.wrapper.element.style.outline = 'none'
+            }
+
+            this.deleteFromStructure = function() {
+                console.log(parentStructureDescription)
             }
         }
     })
 
-    element = ElementPreview(parent, ['yes'])
-    selectedComponent = element
+    return ElementPreviewNode
+}
 
-    if(elementEditor)
-        elementEditor.element = element
-    
-    elementWrapper.element = element
-    structure.push(elementWrapper)
+function updatePreview(rootElement) {
+    structure.forEach(node => {
+        if(node.element)
+            destroyComponentView(node.element)
+
+        node.element = node.component(rootElement, node.structure)
+    })
 }
 
 var ComponentPreview = AnonimComponent({
@@ -112,10 +125,12 @@ var ComponentPreview = AnonimComponent({
 
         this.element.ondragenter = function(event) {
             event.returnValue = false
+            event.preventDefault()
         }
 
         this.element.ondragover = function(event) {
             event.returnValue = false
+            event.preventDefault()
         }
 
         this.element.ondrop = event => {
@@ -123,7 +138,17 @@ var ComponentPreview = AnonimComponent({
             var elementIndex = parseInt(elementType)
             var droppedComponent = components[elementIndex]
 
-            addElementInPreview(this.element, droppedComponent)
+            var innerStructure = []
+            var innerStructureDescription = []
+
+            structure.push({
+                component: createElementWrapper(this.element, innerStructure, innerStructureDescription, droppedComponent),//droppedComponent,
+                element: undefined,
+                structure: innerStructure,
+                innerStructureDescription
+            })
+
+            updatePreview(this.element)
         }
     },
 

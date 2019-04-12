@@ -208,7 +208,7 @@ var Grid = Component({
         gap:     function(gap)     { this.element.style.gap = gap }
     },
 
-    function() {
+    destroy: function() {
         this.parentElement.removeChild(this.element)
     }
 })
@@ -230,6 +230,7 @@ var Scroll = Component({
 
         style.display = 'block'
         style.overflow = 'auto'
+        style.height = '100%'
     },
 
     destroy: function() {
@@ -269,7 +270,7 @@ var Rectangle = Component({
 })
 
 var Rectangle2 = Component({
-    name: 'Rectangle',
+    name: 'Rectangle2',
 
     structure: [
         [null, 'inner-content']
@@ -287,6 +288,40 @@ var Rectangle2 = Component({
         this.element.style.width = '100px'
         this.element.style.height = '100px'
         this.element.style.backgroundColor = 'red'
+    },
+
+    change: {
+        width:   function(width)   {this.element.style.width = width},
+        height:  function(height)  {this.element.style.height = height},
+        margin:  function(margin)  {this.element.style.margin = margin},
+        padding: function(padding) {this.element.style.padding = padding},
+        color:   function(color)   {this.element.style.backgroundColor = color}
+    },
+
+    destroy: function() {
+        this.parentElement.removeChild(this.element)
+    }
+})
+
+var Rectangle3 = Component({
+    name: 'Rectangle3',
+
+    structure: [
+        [null, 'inner-content']
+    ],
+
+    inputs: ['width', 'height', 'margin', 'padding', 'color'],
+
+    create: function() {
+        this.element = document.createElement('div')
+        this.parentElement.appendChild(this.element)
+    },
+
+    init: function() {
+        this.element.style.display = 'inline-block'
+        this.element.style.width = '100px'
+        this.element.style.height = '100px'
+        this.element.style.backgroundColor = '#123'
     },
 
     change: {
@@ -349,7 +384,7 @@ var TabPanel = Component({
         ]]
     ],
 
-    inputs: ['tabNames', 'pages', 'tabChanged'],
+    inputs: ['tabNames', 'pages', 'defaultTabIndex', 'tabChanged'],
     //outputs: ['tabChanged'],
 
     init: function() {
@@ -402,6 +437,16 @@ var TabPanel = Component({
 
         pages: function(pages) {
             this.pages = pages
+
+            var tabIndex = 0
+
+            if(this.defaultTabIndex)
+                tabIndex = this.defaultTabIndex
+
+            if(this.selectedTab)
+                destroyComponentView(this.selectedTab)
+
+            this.selectedTab = this.pages[tabIndex](this.page.element)
         }
     }
 })

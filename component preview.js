@@ -33,20 +33,25 @@ function componentViewHasInnerContent(componentView) {
 
 var highlightedPreview
 
-function createElementWrapper(parentElement, parentStructure, parentStructureDescription, component) {
+function createElementWrapper(parentElement, currentStructure, parentStructureDescription, component, componentDescription) {
     var ElementPreviewNode = AnonimComponent({
         name: 'element-preview-node',
 
         structure: [
             ['wrapper', Rectangle, [
-                ['wrappedComponent', component, parentStructure]
+                ['wrappedComponent', component, currentStructure]
             ]]
         ],
 
         init: function() {
             this.wrapper.element.style.display = 'inline'
 
-            //console.log(componentViewHasInnerContent(this.root))
+            this.wrappedComponent.inputs.forEach(input => {
+                if(input in componentDescription.inputs)
+                    this.wrappedComponent[input] = componentDescription.inputs[input]
+            })
+
+            componentDescription.element = this.root
 
             this.wrapper.element.ondrop = event => {
                 event.stopPropagation()
@@ -57,22 +62,29 @@ function createElementWrapper(parentElement, parentStructure, parentStructureDes
 
                 var innerStructureDescription = []
 
-                parentStructureDescription.push({
+                var droppedDescription = {
+                    name: undefined,
                     element: this.root,
-                    innerStructureDescription
-                })
+                    innerStructureDescription,
+                    inputs: {},
+                    structure: [],
+                    parentStructureDescription,
+                    parentStructure: currentStructure
+                }
 
-                parentStructure.push([createElementWrapper(parentElement, [], innerStructureDescription, droppedComponent)])
+                parentStructureDescription.push(droppedDescription)
+
+                currentStructure.push([createElementWrapper(parentElement, droppedDescription.structure, innerStructureDescription, droppedComponent, droppedDescription)])
                 updatePreview(parentElement)
             }
 
             this.wrapper.element.onclick = event => {
                 event.stopPropagation()
 
-                selectedComponent = this.root
-                //console.log(this)
+                selectedComponentDescription = componentDescription
+
                 if(elementEditor)
-                    elementEditor.element = this.root
+                    elementEditor.componentDescription = selectedComponentDescription
             }
 
             this.wrapper.element.onmousemove = (event) => {
@@ -103,13 +115,18 @@ function createElementWrapper(parentElement, parentStructure, parentStructureDes
     return ElementPreviewNode
 }
 
+var previewRootElement
+
 function updatePreview(rootElement) {
     structure.forEach(node => {
         if(node.element)
             destroyComponentView(node.element)
 
-        node.element = node.component(rootElement, node.structure)
+        node.component(rootElement, node.structure)
     })
+
+    if(elementEditor && selectedComponentDescription)
+        elementEditor.componentDescription = selectedComponentDescription
 }
 
 var ComponentPreview = AnonimComponent({
@@ -117,6 +134,7 @@ var ComponentPreview = AnonimComponent({
 
     create: function() {
         this.element = document.createElement('div')
+        previewRootElement = this.element
         this.parentElement.appendChild(this.element)
     },
 
@@ -141,12 +159,17 @@ var ComponentPreview = AnonimComponent({
             var innerStructure = []
             var innerStructureDescription = []
 
-            structure.push({
-                component: createElementWrapper(this.element, innerStructure, innerStructureDescription, droppedComponent),//droppedComponent,
+            var componentDescription = {
+                name: undefined,
+                component: undefined,
                 element: undefined,
-                structure: innerStructure,
-                innerStructureDescription
-            })
+                structure: [],
+                innerStructureDescription: [],
+                inputs: {}
+            }
+
+            componentDescription.component = createElementWrapper(this.element, componentDescription.structure, componentDescription.innerStructureDescription, droppedComponent, componentDescription)
+            structure.push(componentDescription)
 
             updatePreview(this.element)
         }

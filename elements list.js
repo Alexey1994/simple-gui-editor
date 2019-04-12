@@ -11,12 +11,15 @@ var ElementsList = AnonimComponent({
 
     structure: [
         ['wrapper', Rectangle, [
-            ['grid', Grid]
+            [Scroll, [
+                ['grid', Grid]
+            ]]
+            
         ]]
     ],
 
     init: function() {
-        this.wrapper.padding = '20px'
+        //this.wrapper.padding = '20px'
         this.wrapper.color = '#fff'
 
         //this.grid.rows = 'min-content min-content min-content min-content min-content'

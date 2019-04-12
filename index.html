@@ -26,7 +26,10 @@
     <div id="view"></div>
     <div id="content">
         <button onclick="stringifyComponent()">Stringify</button>
+        <button onclick="updateEditor()">Update all</button>
     </div>
+
+    <div id="testPreview"></div>
 
     <script src="ace/ace.js"></script>
     <script src="ace/mode-javascript.js"></script>
@@ -77,6 +80,7 @@
                 this.mainLayout.gap = '20px'
 
                 this.topLayout.columns = 'min-content auto min-content'
+                this.topLayout.rows = '100%'
                 this.topLayout.gap = '20px'
                 this.topLayout.height = '100%'
 
@@ -141,16 +145,79 @@
         })
 
         var page = Page(document.querySelector('#content'))
+
+        function updateEditor() {
+            if(page)
+                destroyComponentView(page)
+
+            page = Page(document.querySelector('#content'))
+        }
     </script>
 
     <script>
+        function defineComponent(component) {
+            function getStructureDefinition(structure) {
+                var data = '['
+
+                structure.forEach((node, index) => {
+                    data += '['
+
+                    if(node[0] !== undefined)
+                        data += `"${node[0]}",`
+
+                    data += `${node[1]}`
+
+                    if(node[2].length)
+                        data += ',' + getStructureDefinition(node[2])
+
+                    data += ']'
+
+                    if(index !== structure.length - 1)
+                        data += ','
+                })
+
+                console.log(structure)
+                return data + ']'
+            }
+
+            var data = `var ${component.name} = Component({`
+            data += `name: "${component.name}",`
+            data += `structure: ${getStructureDefinition(component.structure)},`
+            data += `inputs: ${JSON.stringify(component.inputs)},`
+            data += `outputs: ${JSON.stringify(component.outputs)},`
+            data += `create: function(){${component.create}\n},`
+            data += `init: function(){${component.init}\n},`
+            //data += `change: function(){${component.change}\n},`
+            data += `destroy: function(){${component.destroy}\n}`
+            data += '})'
+
+            data += `;${component.name}(testPreview)`
+
+            console.log(data)
+
+            window.eval(data)
+        }
+
         function stringifyComponent() {
             var inputs = inputsAndOutputsEditor.self.inputs
             var outputs = inputsAndOutputsEditor.self.outputs
 
-            var newStructure = structure.map(structureElement => [structureElement.element.self.wrappedComponent.name])
+            function stringifyStructureNode(node) {
+                var wrappedComponent = node.element.self.wrappedComponent
+                var innerStructure = node.innerStructureDescription.map(stringifyStructureNode)
+
+                //if(node.name !== undefined)
+                    return [node.name, wrappedComponent.name, innerStructure, node.inputs]
+                //else
+                //    return [wrappedComponent.name, innerStructure, node.inputs]
+            }
+
+            var newStructure = structure.map(node => {
+                return stringifyStructureNode(node)
+            })
 
             var component = {
+                name: `C_${Date.now()}`,
                 structure: newStructure,
 
                 inputs,
@@ -163,6 +230,7 @@
             }
 
             console.log(component)
+            defineComponent(component)
         }
     </script>
 

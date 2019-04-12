@@ -3,6 +3,10 @@ var ElementEditor = AnonimComponent({
     
     structure: [
         ['wrapper', Rectangle, [
+            ['nameEditorLayout', Grid, [
+                ['nameEditorName', Text],
+                ['nameEditorValue', Input]
+            ]],
             ['list', List]
         ]],
 
@@ -15,12 +19,23 @@ var ElementEditor = AnonimComponent({
         //[ScriptEditorComponent]
     ],
 
-    inputs: ['element'],
+    inputs: ['componentDescription'],
 
     init: function() {
         this.wrapper.padding = '10px 0'
         this.wrapper.color = '#cacaca'
         this.wrapper.width = '100%'
+
+        this.nameEditorLayout.columns = 'min-content auto'
+        this.nameEditorLayout.gap = '10px'
+
+        this.nameEditorName.value = 'name'
+        this.nameEditorValue.valueChange = newName => {
+            if(this.componentDescription)
+                this.componentDescription.name = newName
+        }
+
+        var editor = this
 
         this.list.template = AnonimComponent({
             name: 'element-input-list-item',
@@ -47,6 +62,7 @@ var ElementEditor = AnonimComponent({
 
                     this.inputValue.valueChange = function(newValue) {
                         value.wrappedElement[value.inputName] = JSON.parse(newValue)
+                        editor.componentDescription.inputs[value.inputName] = JSON.parse(newValue)
                     }
                 }
             }
@@ -54,8 +70,9 @@ var ElementEditor = AnonimComponent({
     },
 
     change: {
-        element: function(element) {
-            this.list.items = element.self.wrappedComponent.inputs.map(inputName => ({inputName, element: this.element, wrappedElement: element.self.wrappedComponent}))
+        componentDescription: function(componentDescription) {
+            this.nameEditorValue.value = componentDescription.name
+            this.list.items = componentDescription.element.self.wrappedComponent.inputs.map(inputName => ({inputName, element: this.element, wrappedElement: componentDescription.element.self.wrappedComponent}))
         }
     }
 })

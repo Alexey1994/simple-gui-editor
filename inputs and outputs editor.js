@@ -20,10 +20,11 @@ var InputsAndOutputsEditor = AnonimComponent({
     ],
 
     init: function() {
-        this.layout.columns = 'auto auto'
+        this.layout.columns = 'min-content min-content'
+        this.layout.rows = 'min-content'
         this.layout.gap = '8px'
 
-        this.inputs = []
+        this.inputs = ['value']
         this.inputBlock.color = '#fff'
         this.addInputButton.text = 'Add input'
 
@@ -47,24 +48,41 @@ var InputsAndOutputsEditor = AnonimComponent({
 
                 this.input.valueChange = value => {
                     this.valueChange(value)
+
+                    var t = changeScript[this.previouseValue]
+                    delete changeScript[this.previouseValue]
+                    changeScript[value] = t
+                    this.previouseValue = value
+
+                    if(changeScriptTab)
+                        changeScriptTab.value = changeScript
                 }
 
                 this.deleteButton.text = 'delete'
                 
                 this.deleteButton.click = () => {
+                    delete changeScript[this.value]
+
+                    if(changeScriptTab)
+                        changeScriptTab.value = changeScript
+
                     this.valueChange()
                 }
             },
 
             change: {
                 value: function(value) {
+                    this.previouseValue = value
                     this.input.value = value
                 }
             }
         })
 
+        this.inputsList.items = this.inputs
+
         this.addInputButton.click = () => {
-            this.inputs.push('inputName')
+            var inputName = `input${generateId()}`
+            this.inputs.push(inputName)
             this.inputsList.items = this.inputs
 
             this.inputsList.itemChange = item => {
@@ -75,9 +93,14 @@ var InputsAndOutputsEditor = AnonimComponent({
                 else
                     this.inputs[item.index] = item.data
             }
+
+            changeScript[inputName] = `// Change script`
+
+            if(changeScriptTab)
+                changeScriptTab.value = changeScript
         }
 
-        this.outputs = []
+        this.outputs = ['valueChange']
         this.outputBlock.color = '#fff'
         this.addOutputButton.text = 'Add output'
 
@@ -116,6 +139,8 @@ var InputsAndOutputsEditor = AnonimComponent({
                 }
             }
         })
+
+        this.outputsList.items = this.outputs
 
         this.addOutputButton.click = () => {
             this.outputs.push('outputName')

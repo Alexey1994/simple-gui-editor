@@ -63,7 +63,7 @@ function createElementWrapper(parentElement, currentStructure, parentStructureDe
                 var innerStructureDescription = []
 
                 var droppedDescription = {
-                    name: undefined,
+                    name: generateId(), //undefined,
                     element: this.root,
                     innerStructureDescription,
                     inputs: {},
@@ -76,10 +76,20 @@ function createElementWrapper(parentElement, currentStructure, parentStructureDe
 
                 currentStructure.push([createElementWrapper(parentElement, droppedDescription.structure, innerStructureDescription, droppedComponent, droppedDescription)])
                 updatePreview(parentElement)
+                updateStructure()
             }
 
             this.wrapper.element.onclick = event => {
                 event.stopPropagation()
+
+                if(this.elementEditor) {
+                    destroyComponentView(this.elementEditor)
+                    this.elementEditor = undefined
+                    return
+                }
+
+                this.elementEditor = ElementEditor(this.wrapper.element)
+                this.elementEditor.componentDescription = componentDescription
 
                 selectedComponentDescription = componentDescription
 
@@ -160,7 +170,7 @@ var ComponentPreview = AnonimComponent({
             var innerStructureDescription = []
 
             var componentDescription = {
-                name: undefined,
+                name: generateId(),
                 component: undefined,
                 element: undefined,
                 structure: [],
@@ -172,6 +182,7 @@ var ComponentPreview = AnonimComponent({
             structure.push(componentDescription)
 
             updatePreview(this.element)
+            updateStructure()
         }
     },
 

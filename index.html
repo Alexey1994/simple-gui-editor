@@ -35,6 +35,16 @@
     <script src="ace/mode-javascript.js"></script>
     <script src="ace/snippets/javascript.js"></script>
 
+    <script>
+        var uniquePrefix = Date.now()
+        var idIndex = 0
+
+        function generateId() {
+            ++idIndex
+            return `_${idIndex}` //`_${uniquePrefix}_${idIndex}`
+        }
+    </script>
+
     <script src="text width.js"></script>
     <script src="component.js"></script>
     <script src="components.js"></script>
@@ -43,116 +53,8 @@
     <script src="element editor.js"></script>
     <script src="component structure.js"></script>
     <script src="code editor.js"></script>
+    <script src="change value code editor.js"></script>
     <script src="inputs and outputs editor.js"></script>
-
-    <script>
-        var elementEditor
-        var structureEditor
-        var inputsAndOutputsEditor
-
-        var createScript = '// Create script'
-        var initScript = '// Init script'
-        var changeScript = '// Change script'
-        var destroyScript = '// Destroy script'
-
-        var Page = AnonimComponent({
-            name: 'Page',
-            
-            structure: [
-                ['mainLayout', Grid, [
-                    ['topLayout', Grid, [
-                        [ElementsList],
-                        ['componentPreviewWrapper', Rectangle, [
-                            [ComponentPreview]
-                        ]],
-                        ['tabs', TabPanel]
-                    ]],
-
-                    ['bottomLayout', Grid, [
-                        ['scriptTabPanel', TabPanel],
-                        ['inputsAndOutputsEditor', InputsAndOutputsEditor]
-                    ]]
-                ]]
-            ],
-
-            init: function() {
-                this.mainLayout.rows = 'calc(100% - 200px) 200px'
-                this.mainLayout.gap = '20px'
-
-                this.topLayout.columns = 'min-content auto min-content'
-                this.topLayout.rows = '100%'
-                this.topLayout.gap = '20px'
-                this.topLayout.height = '100%'
-
-                this.componentPreviewWrapper.color = '#fff'
-
-                this.tabs.tabNames = ['Element', 'Structure']
-                this.tabs.pages = [ElementEditor, ComponentStructure]
-
-                this.tabs.tabChanged = {
-                    'Element': tab => {
-                        elementEditor = tab
-                        structureEditor = undefined
-                        //elementEditor.element = selectedElement
-                    },
-
-                    'Structure': tab => {
-                        elementEditor = undefined
-                        structureEditor = tab
-                        structureEditor.structure = structure
-                    }
-                }
-
-                this.bottomLayout.columns = 'auto min-content'
-                this.bottomLayout.gap = '20px'
-
-                this.scriptTabPanel.tabNames = ['Create', 'Init', 'Change', 'Destroy']
-                this.scriptTabPanel.pages = [CodeEditor, CodeEditor, CodeEditor, CodeEditor]
-
-                this.scriptTabPanel.tabChanged = {
-                    'Create': tab => {
-                        tab.value = createScript
-                        tab.valueChange = newScript => createScript = newScript
-                    },
-
-                    'Init': tab => {
-                        tab.value = initScript
-                        tab.valueChange = newScript => initScript = newScript
-                    },
-
-                    'Change': tab => {
-                        tab.value = changeScript
-                        tab.valueChange = newScript => changeScript = newScript
-                    },
-
-                    'Destroy': tab => {
-                        tab.value = destroyScript
-                        tab.valueChange = newScript => destroyScript = newScript
-                    }
-                }
-
-                /*tab => {
-                    switch(tab.name) {
-                        case 'Create':
-                            tab.tab.value = 'Hi'
-                            break
-                    }
-                    console.log(tab)
-                }*/
-
-                inputsAndOutputsEditor = this.inputsAndOutputsEditor
-            }
-        })
-
-        var page = Page(document.querySelector('#content'))
-
-        function updateEditor() {
-            if(page)
-                destroyComponentView(page)
-
-            page = Page(document.querySelector('#content'))
-        }
-    </script>
 
     <script>
         function defineComponent(component) {
@@ -176,7 +78,6 @@
                         data += ','
                 })
 
-                console.log(structure)
                 return data + ']'
             }
 
@@ -186,25 +87,44 @@
             data += `inputs: ${JSON.stringify(component.inputs)},`
             data += `outputs: ${JSON.stringify(component.outputs)},`
             data += `create: function(){${component.create}\n},`
-            data += `init: function(){${component.init}\n},`
-            //data += `change: function(){${component.change}\n},`
+            data += `init: function(){${component.initProperties}${component.init}\n},`
+
+            var change = Object.keys(component.change).map(inputName => {
+                return `'${inputName}': function(${inputName}){${component.change[inputName]}\n}`
+            })
+
+            data += `change: {${change.join(',')}},`
+
             data += `destroy: function(){${component.destroy}\n}`
             data += '})'
 
             data += `;${component.name}(testPreview)`
 
-            console.log(data)
+            //console.log(data)
+
+            localStorage.setItem('c', JSON.stringify(component))
 
             window.eval(data)
+        }
+
+        if(localStorage.getItem('c')) {
+            var storedComponent = JSON.parse(localStorage.getItem('c'))
+            defineComponent(storedComponent)
         }
 
         function stringifyComponent() {
             var inputs = inputsAndOutputsEditor.self.inputs
             var outputs = inputsAndOutputsEditor.self.outputs
 
+            var initProperties = ''
+
             function stringifyStructureNode(node) {
                 var wrappedComponent = node.element.self.wrappedComponent
                 var innerStructure = node.innerStructureDescription.map(stringifyStructureNode)
+
+                Object.keys(node.inputs).map(inputName => {
+                    initProperties += `this.${node.name}.${inputName}=${node.inputs[inputName]};`
+                })
 
                 //if(node.name !== undefined)
                     return [node.name, wrappedComponent.name, innerStructure, node.inputs]
@@ -216,6 +136,8 @@
                 return stringifyStructureNode(node)
             })
 
+
+
             var component = {
                 name: `C_${Date.now()}`,
                 structure: newStructure,
@@ -224,6 +146,7 @@
                 outputs,
 
                 create: createScript,
+                initProperties,
                 init: initScript,
                 change: changeScript,
                 destroy: destroyScript
@@ -232,6 +155,115 @@
             console.log(component)
             defineComponent(component)
         }
+    </script>
+
+    <script>
+        var elementEditor
+        var structureEditor
+        var inputsAndOutputsEditor
+
+        var createScript = '// Create script'
+        var initScript = '// Init script'
+        var changeScript = {'value': '// Change script'}
+        var destroyScript = '// Destroy script'
+
+        var changeScriptTab
+
+        var ViewEditor = AnonimComponent({
+            name: 'ViewEditor',
+
+            structure: [
+                ['layout', Grid, [
+                    [ElementsList],
+                    ['componentPreviewWrapper', Rectangle, [
+                        [ComponentPreview]
+                    ]]
+                ]]
+            ],
+
+            init: function() {
+                this.layout.columns = 'min-content auto'
+                this.layout.gap = '20px'
+
+                this.componentPreviewWrapper.color = '#fff'
+            }
+        })
+
+        var ScriptPanel = AnonimComponent({
+            name: 'ScriptPanel',
+
+            structure: [
+                ['bottomLayout', Grid, [
+                    ['inputsAndOutputsEditor', InputsAndOutputsEditor],
+                    ['scriptTabPanel', TabPanel]
+                ]]
+            ],
+
+            init: function() {
+                this.bottomLayout.rows = 'min-content auto'
+                this.bottomLayout.gap = '20px'
+
+                this.scriptTabPanel.tabNames = ['Create', 'Init', 'Change', 'Destroy']
+                this.scriptTabPanel.pages = [CodeEditor, CodeEditor, ChangeValueCodeEditor, CodeEditor]
+
+                this.scriptTabPanel.tabChanged = {
+                    'Create': tab => {
+                        tab.value = createScript
+                        tab.valueChange = newScript => createScript = newScript
+                    },
+
+                    'Init': tab => {
+                        tab.value = initScript
+                        tab.valueChange = newScript => initScript = newScript
+                    },
+
+                    'Change': tab => {
+                        changeScriptTab = tab
+                        tab.value = changeScript
+                        tab.valueChange = newScript => changeScript = newScript
+                    },
+
+                    'Destroy': tab => {
+                        tab.value = destroyScript
+                        tab.valueChange = newScript => destroyScript = newScript
+                    }
+                }
+
+                inputsAndOutputsEditor = this.inputsAndOutputsEditor
+            }
+        })
+
+        var GUIEditor = AnonimComponent({
+            name: 'GuiEditor',
+
+            structure: [
+                ['mainLayout', Grid, [
+                    ['mainTabPanel', TabPanel],
+                    ['structureEditor', ComponentStructure]
+                ]]
+            ],
+
+            init: function() {
+                this.mainTabPanel.tabNames = ['View', 'Scripts']
+                this.mainTabPanel.pages = [ViewEditor, ScriptPanel]
+
+                this.mainLayout.columns = 'auto 300px'
+                this.mainLayout.gap = '20px'
+
+                structureEditor = this.structureEditor
+            }
+        })
+
+        var page
+
+        function updateEditor() {
+            if(page)
+                destroyComponentView(page)
+
+            page = GUIEditor(document.querySelector('#content'))
+        }
+
+        updateEditor()
     </script>
 
     <!--script src="text width.js"></script>

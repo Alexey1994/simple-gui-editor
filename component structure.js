@@ -1,3 +1,7 @@
+function updateStructure() {
+    structureEditor.structure = structure
+}
+
 var StructureTemplate = AnonimComponent({
     name: 'component-structure-node',
 
@@ -6,6 +10,7 @@ var StructureTemplate = AnonimComponent({
             ['nodeLayout', Grid, [
                 [Rectangle, [
                     ['textWrapper', Rectangle, [
+                        ['name', Text],
                         ['text', Text],
                         ['deleteButton', Button]
                     ]],
@@ -29,6 +34,19 @@ var StructureTemplate = AnonimComponent({
         this.textWrapper.marginTop = '2px'
         this.textWrapper.color = '#eee'
 
+        this.textWrapper.element.onclick = event => {
+            event.stopPropagation()
+
+            if(this.elementEditor) {
+                destroyComponentView(this.elementEditor)
+                this.elementEditor = undefined
+                return
+            }
+
+            this.elementEditor = ElementEditor(this.textWrapper.element)
+            this.elementEditor.componentDescription = this.value
+        }
+
         this.deleteButton.text = 'delete'
         this.deleteButton.click = () => {
             if(this.value.parentStructureDescription) {
@@ -43,11 +61,14 @@ var StructureTemplate = AnonimComponent({
                 structure.splice(index, 1)
                 updatePreview(previewRootElement)
             }
+
+            updateStructure()
         }
     },
 
     change: {
         value: function(elemenetDescription) {
+            this.name.value = `${elemenetDescription.name}: `
             this.text.value = elemenetDescription.element.self.wrappedComponent.name
 
             this.list.template = StructureTemplate
@@ -60,7 +81,7 @@ var ComponentStructure = AnonimComponent({
     name: 'ComponentStructure',
 
     structure: [
-        ['wrapper', Rectangle, [
+        ['wrapper', Scroll, [
             ['list', List]
         ]]
     ],
@@ -70,44 +91,14 @@ var ComponentStructure = AnonimComponent({
     init: function() {
         this.wrapper.color = '#cacaca'
         this.wrapper.padding = '10px 0'
-        this.wrapper.width = '100%'
+        this.wrapper.width = '300px'
 
-        this.list.template = StructureTemplate /*AnonimComponent({
-            name: 'component-structure-node',
-
-            structure: [
-                ['wrapper', Rectangle, [
-                    ['text', Text],
-                    [Grid, [
-                        ['list', List]
-                    ]]
-                ]]
-            ],
-
-            inputs: ['value'],
-            outputs: ['valueChange'],
-
-            init: function() {
-                this.wrapper.color = '#eee'
-                this.wrapper.width = '100%'
-                this.wrapper.margin = '2px 0'
-            },
-
-            change: {
-                value: function(elemenetDescription) {
-                    this.text.value = elemenetDescription.element.self.wrappedComponent.name
-
-                    this.list.template = Input
-                    this.list.items = elemenetDescription.innerStructureDescription
-                    console.log(elemenetDescription)
-                }
-            }
-        })*/
+        this.list.template = StructureTemplate
     },
 
     change: {
         structure: function(structure) {
-            this.list.items = structure//.map(elemenetDescription => elemenetDescription)
+            this.list.items = structure
         }
     }
 })

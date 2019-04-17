@@ -245,7 +245,7 @@ var Rectangle = Component({
         [null, 'inner-content']
     ],
 
-    inputs: ['width', 'height', 'margin', 'padding', 'color'],
+    inputs: ['width', 'minWidth', 'height', 'margin', 'padding', 'color'],
 
     create: function() {
         this.element = document.createElement('div')
@@ -257,11 +257,13 @@ var Rectangle = Component({
     },
 
     change: {
-        width:   function(width)   {this.element.style.width = width},
-        height:  function(height)  {this.element.style.height = height},
-        margin:  function(margin)  {this.element.style.margin = margin},
-        padding: function(padding) {this.element.style.padding = padding},
-        color:   function(color)   {this.element.style.backgroundColor = color}
+        width:    function(width)    {this.element.style.width = width},
+        minWidth: function(minWidth) {this.element.style.minWidth = minWidth},
+        maxWidth: function(maxWidth) {this.element.style.maxWidth = maxWidth},
+        height:   function(height)   {this.element.style.height = height},
+        margin:   function(margin)   {this.element.style.margin = margin},
+        padding:  function(padding)  {this.element.style.padding = padding},
+        color:    function(color)    {this.element.style.backgroundColor = color}
     },
 
     destroy: function() {
@@ -377,10 +379,10 @@ var TabPanel = Component({
 
     structure: [
         ['wrapper', Grid, [
+            ['page', Rectangle],
             ['head', Grid, [
                 ['headList', List]
-            ]],
-            ['page', Rectangle]
+            ]]
         ]]
     ],
 
@@ -389,7 +391,7 @@ var TabPanel = Component({
 
     init: function() {
         var tabPanel = this
-        this.wrapper.rows = 'min-content auto'
+        this.wrapper.rows = 'auto min-content'
 
         this.headList.template = AnonimComponent({
             name: 'tab-panel-head',

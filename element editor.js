@@ -25,6 +25,7 @@ var ElementEditor = AnonimComponent({
         this.wrapper.padding = '10px 0'
         this.wrapper.color = '#cacaca'
         this.wrapper.width = '100%'
+        this.wrapper.element.onclick = event => event.stopPropagation()
 
         this.nameEditorLayout.columns = 'min-content auto'
         this.nameEditorLayout.gap = '10px'
@@ -62,7 +63,7 @@ var ElementEditor = AnonimComponent({
 
                     this.inputValue.valueChange = function(newValue) {
                         value.wrappedElement[value.inputName] = JSON.parse(newValue)
-                        editor.componentDescription.inputs[value.inputName] = JSON.parse(newValue)
+                        editor.componentDescription.inputs[value.inputName] = newValue //JSON.parse(newValue)
                     }
                 }
             }

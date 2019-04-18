@@ -18,6 +18,7 @@ var StructureTemplate = AnonimComponent({
                     ]],
                 ]],
                 [Rectangle, [
+                    ['beforeAllNodes', Rectangle],
                     ['list', List]
                 ]],
                 ['afterNode', Rectangle]
@@ -43,7 +44,7 @@ var StructureTemplate = AnonimComponent({
             //event.preventDefault()
             event.dataTransfer.setData('data', '') //JSON.stringify(this.value))
             draggedStructureNode = this.value
-            console.log(draggedStructureNode)
+            //console.log(draggedStructureNode)
             //console.log(event)
         }
 
@@ -81,6 +82,9 @@ var StructureTemplate = AnonimComponent({
 
             updateStructure()
         }
+
+        this.beforeAllNodes.width = '100%'
+        this.beforeAllNodes.height = '20px'
 
         this.afterNode.width = '100%'
         this.afterNode.height = '20px'
@@ -126,13 +130,22 @@ var StructureTemplate = AnonimComponent({
                 dropStructure.splice(item.index + 1, 0, null)
                 var parentStructure = draggedStructureNode.parentStructure
 
-                if(parentStructure)
+                if(parentStructure) {
+                    var structureNode = parentStructure[indexInParentNode]
                     parentStructure.splice(indexInParentNode, 1)
-                else
+
+                    draggedStructureNode.parentStructure = dropStructure
+                    dropStructure.splice(dropStructure.indexOf(null), 1, structureNode)
+                }
+                else {
                     destroyComponentView(draggedStructureNode.element)
+                    draggedStructureNode.parentStructure = dropStructure
+                    dropStructure.splice(dropStructure.indexOf(null), 1, [draggedStructureNode.component])
+                }
                 
-                draggedStructureNode.parentStructure = dropStructure
-                dropStructure.splice(dropStructure.indexOf(null), 1, [draggedStructureNode.component])
+                //draggedStructureNode.parentStructure = dropStructure
+                //dropStructure.splice(dropStructure.indexOf(null), 1, structureNode)
+                //dropStructure.splice(dropStructure.indexOf(null), 1, [draggedStructureNode.component])
                 //dropStructure.splice(dropStructure.indexOf(null), 1, [draggedStructureNode.name, draggedStructureNode.component, draggedStructureNode.structure])
 
 
@@ -186,11 +199,12 @@ var ComponentStructure = AnonimComponent({
             if(draggedStructureNode.parentStructureDescription) {
                 var nodeIndex = draggedStructureNode.parentStructureDescription.indexOf(draggedStructureNode)
                 draggedStructureNode.parentStructureDescription.splice(nodeIndex, 1)
-                //draggedStructureNode.parentStructure.splice(nodeIndex, 1)
+                draggedStructureNode.parentStructure.splice(nodeIndex, 1)
                 delete draggedStructureNode.parentStructureDescription
                 delete draggedStructureNode.parentStructure
 
                 this.structure.splice(item.index + 1, 0, draggedStructureNode)
+                console.log(this.structure)
             }
             else {
                 this.structure.splice(item.index + 1, 0, null)

@@ -245,7 +245,7 @@ var Rectangle = Component({
         [null, 'inner-content']
     ],
 
-    inputs: ['width', 'minWidth', 'height', 'margin', 'padding', 'color'],
+    inputs: ['width', 'minWidth', 'height', 'minHeight', 'margin', 'padding', 'color'],
 
     create: function() {
         this.element = document.createElement('div')
@@ -257,13 +257,14 @@ var Rectangle = Component({
     },
 
     change: {
-        width:    function(width)    {this.element.style.width = width},
-        minWidth: function(minWidth) {this.element.style.minWidth = minWidth},
-        maxWidth: function(maxWidth) {this.element.style.maxWidth = maxWidth},
-        height:   function(height)   {this.element.style.height = height},
-        margin:   function(margin)   {this.element.style.margin = margin},
-        padding:  function(padding)  {this.element.style.padding = padding},
-        color:    function(color)    {this.element.style.backgroundColor = color}
+        width:     function(width)     {this.element.style.width = width},
+        minWidth:  function(minWidth)  {this.element.style.minWidth = minWidth},
+        maxWidth:  function(maxWidth)  {this.element.style.maxWidth = maxWidth},
+        height:    function(height)    {this.element.style.height = height},
+        minHeight: function(minHeight) {this.element.style.minHeight = minHeight},
+        margin:    function(margin)    {this.element.style.margin = margin},
+        padding:   function(padding)   {this.element.style.padding = padding},
+        color:     function(color)     {this.element.style.backgroundColor = color}
     },
 
     destroy: function() {

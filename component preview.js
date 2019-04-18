@@ -48,10 +48,20 @@ function createElementWrapper(parentElement, currentStructure, parentStructureDe
 
             this.wrappedComponent.inputs.forEach(input => {
                 if(input in componentDescription.inputs)
-                    this.wrappedComponent[input] = componentDescription.inputs[input]
+                    this.wrappedComponent[input] = JSON.parse(componentDescription.inputs[input])
             })
 
             componentDescription.element = this.root
+
+            this.wrapper.element.ondragenter = function(event) {
+                event.returnValue = false
+                event.preventDefault()
+            }
+
+            this.wrapper.element.ondragover = function(event) {
+                event.returnValue = false
+                event.preventDefault()
+            }
 
             this.wrapper.element.ondrop = event => {
                 event.stopPropagation()
@@ -64,6 +74,7 @@ function createElementWrapper(parentElement, currentStructure, parentStructureDe
 
                 var droppedDescription = {
                     name: generateId(), //undefined,
+                    component: droppedComponent,
                     element: this.root,
                     innerStructureDescription,
                     inputs: {},

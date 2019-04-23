@@ -197,6 +197,8 @@ var ComponentStructure = AnonimComponent({
         this.list.template = StructureTemplate
         this.list.itemChange = item => {
             if(draggedStructureNode.parentStructureDescription) {
+                console.log(draggedStructureNode.parentStructureDescription)
+
                 var nodeIndex = draggedStructureNode.parentStructureDescription.indexOf(draggedStructureNode)
                 draggedStructureNode.parentStructureDescription.splice(nodeIndex, 1)
                 draggedStructureNode.parentStructure.splice(nodeIndex, 1)

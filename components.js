@@ -351,8 +351,11 @@ var List = Component({
     },
 
     change: {
-        items: function(items) {
+        items: function(items, previouseItems) {
             var self = this
+
+            if(previouseItems)
+                previouseItems['subscriptions'].splice(previouseItems['subscriptions'].indexOf(this), 1)
 
             this.views.forEach(view => destroyComponentView(view))
             this.views.splice(0, this.views.length)
@@ -367,13 +370,58 @@ var List = Component({
 
                 this.views[index] = component
             })
+
+            if(!items['subscriptions']) {
+                items['subscriptions'] = [this]
+            }
+            else {
+                items['subscriptions'].push(this)
+            }
+
+            if(!items['delete']) {
+                items['delete'] = function(index) {
+                    this.subscriptions.forEach(subscription => {
+                        destroyComponentView(subscription.views[index])
+                        subscription.views.splice(index, 1)
+                    })
+                }
+            }
+
+            if(!items['insert']) {
+                items['insert'] = function(value, index) {
+                    this.subscriptions.forEach(subscription => {
+                        //destroyComponentView(subscription.views[index])
+                        console.log(subscription.parentElement, subscription.views)
+
+                        var component = subscription.template(subscription.parentElement)
+                        component.value = value
+
+                        component.valueChange = function(data) {
+                            subscription.itemChange({data, index})
+                        }
+
+                        subscription.views.splice(index, 0, component)
+                    })
+                }
+            }
         }
     },
 
     destroy: function() {
+        if(this.items)
+            this.items['subscriptions'].splice(this.items['subscriptions'].indexOf(this), 1)
+
         this.views.forEach(view => destroyComponentView(view))
     }
 })
+
+/*
+var l = List(document.body)
+l.template = Text
+l.items = ['Alexey', 'Oknesirob']
+l.items.delete(1)
+l.items.insert('Hi', 1)
+*/
 
 var TabPanel = Component({
     name: 'TabPanel',
